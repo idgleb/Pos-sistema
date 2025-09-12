@@ -1,0 +1,189 @@
+/**
+ * Estilos para el componente Button
+ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Variantes */
+.btn--primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn--secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-text-inverse);
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-secondary-hover);
+}
+
+.btn--outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.btn--outline:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn--success {
+  background-color: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.btn--success:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.btn--warning {
+  background-color: var(--color-warning);
+  color: var(--color-text-inverse);
+}
+
+.btn--warning:hover:not(:disabled) {
+  background-color: #d97706;
+}
+
+.btn--error {
+  background-color: var(--color-error);
+  color: var(--color-text-inverse);
+}
+
+.btn--error:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+/* Tamaños */
+.btn--sm {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  min-height: 32px;
+}
+
+.btn--md {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  min-height: 40px;
+}
+
+.btn--lg {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  min-height: 48px;
+}
+
+.btn--xl {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  font-size: var(--font-size-xl);
+  min-height: 56px;
+}
+
+/* Estados */
+.btn--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--loading {
+  cursor: wait;
+}
+
+.btn--loading .btn-content {
+  opacity: 0.7;
+}
+
+.btn-spinner {
+  position: absolute;
+  animation: spin 1s linear infinite;
+  font-size: 1.2em;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Botón de ancho completo */
+.btn--full {
+  width: 100%;
+}
+
+/* Botón redondo */
+.btn--round {
+  border-radius: var(--radius-full);
+  aspect-ratio: 1;
+  padding: var(--spacing-sm);
+}
+
+.btn--round.btn--sm {
+  width: 32px;
+  height: 32px;
+}
+
+.btn--round.btn--md {
+  width: 40px;
+  height: 40px;
+}
+
+.btn--round.btn--lg {
+  width: 48px;
+  height: 48px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .btn--lg {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    min-height: 44px;
+  }
+  
+  .btn--xl {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-lg);
+    min-height: 52px;
+  }
+}
+
+

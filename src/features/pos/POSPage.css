@@ -1,0 +1,155 @@
+/**
+ * Estilos para la página POS
+ */
+
+/* Asegurar que los contenedores principales usen todo el ancho disponible */
+.pos-page,
+.pos-content,
+.pos-layout,
+.pos-left,
+.pos-right {
+  max-width: none !important;
+}
+
+.pos-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* Permitir que se encoja */
+  padding: var(--spacing-md) var(--spacing-sm); /* Padding que antes manejaba PageContainer */
+  padding-top: calc(64px + var(--spacing-md)); /* Compensar altura del navbar fijo */
+  box-sizing: border-box;
+  min-height: 100vh; /* Altura mínima completa */
+}
+
+.pos-header {
+  text-align: center;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0;
+}
+
+.pos-title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.pos-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.pos-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.pos-layout {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex: 1;
+  min-height: calc(100vh - 150px); /* Altura mínima menos navbar y padding */
+  width: 100%;
+  max-width: 100%;
+}
+
+.pos-left {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible; /* Cambiar de hidden a visible */
+  flex: 2; /* Ocupar 2/3 del espacio disponible */
+  min-width: 0; /* Permitir que se encoja */
+}
+
+.pos-right {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1; /* Ocupar 1/3 del espacio disponible */
+  min-width: 0; /* Permitir que se encoja */
+}
+
+.pos-right-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  height: 100%;
+}
+
+/* Responsive design */
+@media (max-width: 1400px) {
+  .pos-layout {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 1200px) {
+  .pos-layout {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .pos-left {
+    flex: 1;
+  }
+  
+  .pos-right {
+    flex: 1;
+  }
+  
+  .pos-right-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .pos-header {
+    padding: var(--spacing-md) 0;
+  }
+  
+  .pos-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .pos-subtitle {
+    font-size: var(--font-size-base);
+  }
+  
+  .pos-layout {
+    gap: var(--spacing-sm);
+  }
+  
+  .pos-right-content {
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 640px) {
+  .pos-header {
+    padding: var(--spacing-sm) 0;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .pos-title {
+    font-size: var(--font-size-xl);
+  }
+  
+  .pos-subtitle {
+    font-size: var(--font-size-sm);
+  }
+}

@@ -1,0 +1,175 @@
+/**
+ * Estilos específicos para desktop (1001px+)
+ * Optimizado para pantallas grandes y productividad
+ */
+
+/* Desktop estándar (1061px - 1440px) */
+@media (min-width: 1061px) {
+  /* Contenedor principal con padding amplio */
+  .expenses-page {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    padding-top: calc(64px + var(--spacing-md));
+    height: 100vh;
+  }
+
+  /* Botón flotante con tamaño completo */
+  .expenses-floating-add-btn {
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: var(--font-size-md);
+    gap: var(--spacing-sm);
+  }
+
+  /* Layout de dos columnas con sidebar flexible */
+  .expenses-layout {
+    grid-template-columns: minmax(300px, 400px) 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  /* Columna de tabla con altura completa */
+  .expenses-column {
+    height: calc(100vh - 64px - var(--spacing-md));
+  }
+
+  /* Ocultar botón de filtros en desktop */
+  .filter-toggle-btn {
+    display: none;
+  }
+
+  /* Filtros como sidebar */
+  .expenses-filters-section {
+    order: 2;
+    padding: var(--spacing-xl);
+    position: static;
+    top: calc(64px + var(--spacing-md));
+    max-height: calc(100vh - 64px - var(--spacing-md) * 2);
+    overflow-y: auto;
+    display: block;
+  }
+
+  /* Header de filtros espacioso */
+  .expenses-filters-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: start;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .expenses-filters-header h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Chips más visibles */
+  .expenses-quick-filters {
+    flex: 1;
+    justify-content: flex-start;
+    padding: var(--spacing-xs) 0;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap !important;
+  }
+
+  .quick-filter-btn {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+
+  /* Grid de filtros responsive */
+  .filters-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    align-items: end;
+  }
+
+  /* Información de resultados */
+  .results-info {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+  }
+
+  /* Contenedor de tabla optimizado */
+  .expenses-table-container {
+    margin-bottom: 12px;
+    height: calc(100vh - 90px);
+    max-height: calc(100vh - 90px);
+  }
+
+  /* Header de tabla profesional */
+  .table-header-section {
+    padding: var(--spacing-lg);
+  }
+
+  .table-header-section h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  .table-info {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Tabla con columnas amplias */
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr 120px 120px 1fr 100px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-xl);
+  }
+
+  .table-header {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Tamaños de fuente estándar */
+  .date-main {
+    font-size: var(--font-size-sm);
+  }
+
+  .date-time {
+    font-size: var(--font-size-xs);
+    margin-top: 6px;
+  }
+
+  .type-badge {
+    font-size: var(--font-size-xs);
+    padding: 4px 12px;
+  }
+
+  .amount-value {
+    font-size: var(--font-size-base);
+  }
+
+  .note-content {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Botones de acción estándar */
+  .btn-edit,
+  .btn-delete {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-xs);
+  }
+
+  /* Paginación completa */
+  .pagination {
+    padding: var(--spacing-lg);
+    min-height: 60px;
+  }
+
+  .pagination-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+
+  .pagination-number {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    min-width: 40px;
+  }
+}
+
+

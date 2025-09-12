@@ -1,0 +1,291 @@
+/**
+ * Estilos específicos para tablet (651px - 1060px)
+ * Incluye breakpoints para orientación portrait y landscape
+ */
+
+@media (min-width: 651px) and (max-width: 1060px) {
+  /* Ajustes del contenedor principal */
+  .expenses-page {
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-top: calc(64px + var(--spacing-md));
+    height: 100vh;
+  }
+
+  /* Botón flotante tamaño intermedio */
+  .expenses-floating-add-btn {
+    bottom: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    gap: var(--spacing-sm);
+  }
+
+  /* Layout de una columna con espaciado medio */
+  .expenses-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Columna de tabla optimizada */
+  .expenses-column {
+    order: 1;
+    height: calc(100vh - 64px - var(--spacing-md) * 2);
+  }
+
+  /* Botón de filtros para tablet dentro de table-controls */
+  .filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    white-space: nowrap;
+  }
+
+  .filter-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .filter-icon {
+    font-size: var(--font-size-lg);
+  }
+
+  .filter-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* Ocultar filtros normales en tablet */
+  .expenses-filters-section {
+    display: none;
+  }
+
+  /* Estilos específicos del modal de filtros en tablet */
+  .filters-modal-content {
+    max-height: 85vh;
+  }
+
+  .filters-modal-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .filters-modal-header h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  .filters-modal-body {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .filters-modal-footer {
+    padding: var(--spacing-md) var(--spacing-lg);
+    flex-direction: row;
+    gap: var(--spacing-sm);
+  }
+
+  .filters-modal-footer .btn-primary,
+  .filters-modal-footer .btn-secondary {
+    width: 100%;
+    padding: var(--spacing-md);
+  }
+
+  /* Header de filtros con chips inline */
+  .expenses-filters-header {
+    flex-direction: row;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .expenses-filters-header h3 {
+    font-size: var(--font-size-lg);
+    white-space: nowrap;
+  }
+
+  /* Chips más visibles */
+  .expenses-quick-filters {
+    flex: 1;
+    justify-content: flex-start;
+    padding: var(--spacing-xs) 0;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap !important;
+  }
+
+  .quick-filter-btn {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  /* Grid de filtros en 1 columna como móvil */
+  .filters-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  /* Campos de filtro más pequeños como en móvil */
+  .filter-group input,
+  .filter-group select {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    border-radius: 6px;
+  }
+
+  .filter-group label {
+    font-size: var(--font-size-xs);
+    margin-bottom: 2px;
+  }
+
+  /* Campos específicos en línea para tablet */
+  .filter-search,
+  .filter-date-from,
+  .filter-date-to {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: var(--spacing-xs) !important;
+  }
+
+  .filter-search label,
+  .filter-date-from label,
+  .filter-date-to label {
+    margin-bottom: 0 !important;
+    white-space: nowrap !important;
+    min-width: fit-content !important;
+    flex-shrink: 0 !important;
+    font-size: var(--font-size-xs) !important;
+  }
+
+  .filter-search input,
+  .filter-date-from input,
+  .filter-date-to input {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: var(--spacing-sm) !important;
+    font-size: var(--font-size-sm) !important;
+  }
+
+  /* Información de resultados con más padding en tablet */
+  .results-info {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Filtros activos en tablet */
+  .active-filters-section {
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .active-filters-title {
+    font-size: var(--font-size-sm);
+  }
+
+  .clear-all-filters-btn {
+    font-size: var(--font-size-xs);
+  }
+
+  .active-filter-chip {
+    font-size: var(--font-size-xs);
+  }
+
+  /* Contenedor de tabla con altura optimizada */
+  .expenses-table-container {
+    height: 100%;
+    max-height: calc(100vh - 100px);
+    margin-bottom: 0;
+  }
+
+  /* Header de tabla con controles inline */
+  .table-header-section {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .table-header-section h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  /* Tabla con grid de 4 columnas */
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr 100px 100px 1.5fr 80px;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Tamaños de fuente optimizados */
+  .table-header {
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-md);
+  }
+
+  .table-row {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .date-main {
+    font-size: var(--font-size-sm);
+  }
+
+  .date-time {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .type-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .amount-value {
+    font-size: var(--font-size-md);
+  }
+
+  .note-content {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Botones de acción medianos */
+  .btn-edit,
+  .btn-delete {
+    width: 30px;
+    height: 30px;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Paginación optimizada */
+  .pagination {
+    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+  }
+
+  .pagination-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+
+  .pagination-number {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-sm);
+    min-width: 36px;
+  }
+}
+

@@ -1,0 +1,83 @@
+/**
+ * Estilos modernos para el gráfico de ventas
+ */
+
+.sales-by-product-pie {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sales-by-product-pie .chart-header {
+  display: none; /* Ocultamos el header redundante */
+}
+
+.chart-container {
+  flex: 1;
+  position: relative;
+  min-height: 450px;
+  max-height: 600px;
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.no-data-icon {
+  font-size: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.3;
+  animation: float 3s ease-in-out infinite;
+}
+
+.no-data-message p {
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Animación para el icono vacío */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Estilos para el canvas del gráfico */
+.sales-by-product-pie canvas {
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.08));
+  transition: filter 0.3s ease;
+}
+
+.sales-by-product-pie canvas:hover {
+  filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.12));
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .chart-container {
+    min-height: 300px;
+    max-height: 350px;
+    padding: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    min-height: 250px;
+    max-height: 300px;
+  }
+  
+  .no-data-icon {
+    font-size: 36px;
+  }
+}

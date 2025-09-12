@@ -1,0 +1,125 @@
+/**
+ * Estilos para el componente Keypad
+ */
+
+.keypad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-md);
+}
+
+.keypad-header {
+  text-align: center;
+}
+
+.keypad-header h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.keypad-header p {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.keypad-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.amount-input {
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.display-amount {
+  text-align: center;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.keypad-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.keypad-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.keypad-btn {
+  aspect-ratio: 1;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  min-height: 50px;
+}
+
+.keypad-btn--empty {
+  visibility: hidden;
+}
+
+.keypad-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-sm);
+}
+
+.add-service-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .keypad {
+    padding: var(--spacing-sm);
+  }
+  
+  .keypad-btn {
+    min-height: 45px;
+    font-size: var(--font-size-base);
+  }
+  
+  .display-amount {
+    font-size: var(--font-size-xl);
+  }
+}
+
+@media (max-width: 640px) {
+  .keypad-btn {
+    min-height: 40px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .display-amount {
+    font-size: var(--font-size-lg);
+  }
+  
+  .keypad-header h3 {
+    font-size: var(--font-size-base);
+  }
+  
+  .keypad-header p {
+    font-size: var(--font-size-xs);
+  }
+}
+
+

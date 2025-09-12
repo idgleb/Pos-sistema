@@ -1,0 +1,69 @@
+/**
+ * Estilos para el componente PageContainer
+ */
+
+.page-container {
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  padding-top: 64px; /* Altura del navbar fijo */
+  background-color: var(--color-bg-secondary);
+  box-sizing: border-box;
+}
+
+.page-content {
+  max-width: var(--max-width, 100%);
+  margin: 0;
+  padding: var(--spacing-md) var(--spacing-sm);
+  min-height: calc(100vh - 64px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .page-container {
+    padding-top: 56px; /* Altura del navbar en móvil */
+  }
+  
+  .page-content {
+    padding: var(--spacing-md) var(--spacing-sm);
+    min-height: calc(100vh - 56px);
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Variantes de PageContainer */
+.page-container--full {
+  padding-top: 0;
+}
+
+.page-container--full .page-content {
+  min-height: 100vh;
+  padding-top: 0;
+}
+
+.page-container--narrow {
+  --max-width: 800px;
+}
+
+.page-container--wide {
+  --max-width: 1400px;
+}
+
+.page-container--no-padding .page-content {
+  padding: 0;
+}
+
+.page-container--small-padding .page-content {
+  padding: var(--spacing-sm);
+}
+
+.page-container--large-padding .page-content {
+  padding: var(--spacing-xl);
+}

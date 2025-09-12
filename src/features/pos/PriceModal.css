@@ -1,0 +1,245 @@
+/**
+ * Estilos para el modal de precio libre
+ */
+
+/* Overlay - fondo oscuro que cubre toda la pantalla */
+.price-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+  backdrop-filter: blur(2px);
+}
+
+/* Contenedor principal del modal */
+.price-modal {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cabecera del modal */
+.price-modal-header {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  background-color: var(--color-primary-light);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.price-modal-header p {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  margin: 0;
+}
+
+/* Botón para cerrar el modal */
+.price-modal-close {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all var(--transition-fast);
+}
+
+.price-modal-close:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.1);
+}
+
+/* Contenido del modal */
+.price-modal-content {
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Sección de visualización del precio */
+.price-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.price-amount {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  min-width: 180px;
+  margin-bottom: var(--spacing-sm);
+}
+
+.price-input {
+  width: 100%;
+}
+
+.price-input-field {
+  width: 100%;
+  padding: var(--spacing-xs);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  transition: all var(--transition-fast);
+}
+
+.price-input-field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Teclado numérico */
+.price-keypad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.keypad-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.keypad-row--special {
+  grid-template-columns: 1fr;
+}
+
+.keypad-btn {
+  aspect-ratio: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  min-height: 36px;
+  border-radius: var(--radius-sm);
+}
+
+.keypad-btn--decimal {
+  aspect-ratio: auto;
+  width: 100%;
+}
+
+/* Acciones del modal (botones) */
+.price-modal-actions {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  display: flex;
+  gap: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg-secondary);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+.cancel-btn,
+.confirm-btn {
+  flex: 1;
+  justify-content: center;
+  min-height: 32px;
+  font-size: var(--font-size-xs);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .price-modal-overlay {
+    padding: var(--spacing-sm);
+    align-items: center;
+  }
+  
+  .price-modal {
+    max-width: 280px;
+    animation: modalFadeIn 0.3s ease-out;
+  }
+}
+
+@media (max-width: 640px) {
+  .price-modal-overlay {
+    align-items: flex-end;
+  }
+  
+  .price-modal {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    animation: modalSlideUp 0.3s ease-out;
+  }
+  
+  @keyframes modalSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  
+  .price-modal-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  .price-modal-content {
+    padding: var(--spacing-sm);
+    gap: var(--spacing-sm);
+  }
+  
+  .keypad-btn {
+    min-height: 40px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .price-modal-actions {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Animaciones para botones del teclado */
+.keypad-btn:active {
+  transform: scale(0.95);
+}
