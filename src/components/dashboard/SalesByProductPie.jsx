@@ -5,11 +5,69 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Pie } from 'react-chartjs-2';
+import { Doughnut } from 'react-chartjs-2';
 import './SalesByProductPie.css';
 
+// Plugin personalizado para centrar texto en el doughnut
+const centerTextPlugin = {
+  id: 'centerText',
+  afterDatasetsDraw: (chart) => {
+    const { ctx, chartArea } = chart;
+    const centerX = (chartArea.left + chartArea.right) / 2;
+    const centerY = (chartArea.top + chartArea.bottom) / 2;
+    
+    // Obtener el total de los datos
+    const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+    
+    // Determinar el tamaño de fuente basado en el ancho del gráfico
+    const chartWidth = chartArea.right - chartArea.left;
+    let labelFontSize, valueFontSize, spacing;
+    
+    if (chartWidth < 300) {
+      // Móvil
+      labelFontSize = 6;
+      valueFontSize = 8;
+      spacing = 3;
+    } else if (chartWidth < 500) {
+      // Tablet
+      labelFontSize = 8;
+      valueFontSize = 10;
+      spacing = 4;
+    } else {
+      // Desktop
+      labelFontSize = 14;
+      valueFontSize = 18;
+      spacing = 8;
+    }
+    
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Dibujar "TOTAL"
+    ctx.font = `bold ${labelFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('TOTAL', centerX, centerY - spacing);
+    
+    // Dibujar el valor
+    ctx.font = `bold ${valueFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillText(
+      new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 2
+      }).format(total / 100),
+      centerX,
+      centerY + spacing
+    );
+    
+    ctx.restore();
+  }
+};
+
 // Registrar los componentes necesarios de Chart.js
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, centerTextPlugin);
 
 const SalesByProductPie = ({ movements, products }) => {
   const chartData = useMemo(() => {
@@ -93,8 +151,22 @@ const SalesByProductPie = ({ movements, products }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      centerText: true,
       legend: {
         position: 'bottom',
+        onClick: function(e, legendItem, legend) {
+          const index = legendItem.index;
+          const chart = legend.chart;
+          
+          // Toggle visibility
+          const meta = chart.getDatasetMeta(0);
+          meta.data[index].hidden = !meta.data[index].hidden;
+          
+          // Update legend item
+          legendItem.hidden = meta.data[index].hidden;
+          
+          chart.update();
+        },
         labels: {
           padding: 15,
           usePointStyle: true,
@@ -111,12 +183,15 @@ const SalesByProductPie = ({ movements, products }) => {
               return data.labels.map((label, i) => {
                 const value = data.datasets[0].data[i];
                 const percentage = ((value / total) * 100).toFixed(1);
+                const meta = chart.getDatasetMeta(0);
+                const isHidden = meta.data[i] ? meta.data[i].hidden : false;
+                
                 return {
                   text: `${label} (${percentage}%)`,
                   fillStyle: data.datasets[0].backgroundColor[i],
                   strokeStyle: data.datasets[0].borderColor[i],
                   lineWidth: 2,
-                  hidden: false,
+                  hidden: isHidden,
                   index: i
                 };
               });
@@ -156,15 +231,21 @@ const SalesByProductPie = ({ movements, products }) => {
     animation: {
       animateScale: true,
       animateRotate: true
-    }
+    },
+    cutout: '60%'
   };
 
   const totalRevenue = chartData.datasets[0].data.reduce((sum, value) => sum + value, 0);
 
   return (
     <div className="sales-by-product-pie">
-      <div className="chart-container">
-        <Pie data={chartData} options={options} />
+      <div className="chart-header">
+        <h3 className="chart-title">Ventas por Producto</h3>
+        <p className="chart-subtitle">Distribución de ingresos del día</p>
+      </div>
+      
+      <div className="doughnut-container">
+        <Doughnut data={chartData} options={options} />
       </div>
       
       {chartData.labels.length === 1 && chartData.labels[0] === 'Sin ventas' && (

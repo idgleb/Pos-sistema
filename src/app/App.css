@@ -20,10 +20,15 @@
   min-width: 0; /* Permitir que se encoja */
 }
 
+/* Excluir el dashboard de los estilos de app-main */
+.app-main > .dashboard-page {
+  display: block;
+  flex: none;
+}
+
 /* Estilos para las páginas placeholder */
 .pos-page,
 .expenses-page,
-.dashboard-page,
 .movements-page,
 .products-page {
   display: flex;
@@ -195,7 +200,6 @@
 
 .pos-content,
 .expenses-content,
-.dashboard-content,
 .movements-content,
 .products-content {
   flex: 1;

@@ -1,47 +1,130 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../../app/store/StoreProvider';
-import KpiCard from '../../components/dashboard/KpiCard';
 import SalesByProductPie from '../../components/dashboard/SalesByProductPie';
+import TicketPromedioCard from '../../components/dashboard/TicketPromedioCard';
+import ProductosTopCard from '../../components/dashboard/ProductosTopCard';
+import VelocidadVentas from '../../components/dashboard/VelocidadVentas';
+import IngresosCard from '../../components/dashboard/IngresosCard';
+import GastosCard from '../../components/dashboard/GastosCard';
+import BalanceEfectivoCard from '../../components/dashboard/BalanceEfectivoCard';
 import { 
   filterMovementsByTypeAndToday, 
+  filterMovementsByTypeAndRange,
   sumMovementsAmount, 
-  formatCurrency
+  formatCurrency,
+  getYesterdayRange,
+  getLastWeekRange,
+  getLastMonthRange,
+  calculateAverageTicket,
+  getTopSellingProducts,
+  calculateSalesVelocity,
+  calculatePercentageChange,
+  calculateCashBalance
 } from '../../lib/dateHelpers';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
   const { state } = useStore();
 
-  // Calcular métricas del día
-  const dailyMetrics = useMemo(() => {
+  // Calcular métricas avanzadas del día
+  const advancedMetrics = useMemo(() => {
     // Filtrar movimientos del día actual
     const todaySales = filterMovementsByTypeAndToday(state.movements, 'sale');
     const todayExpenses = filterMovementsByTypeAndToday(state.movements, 'expense');
     
-    // Calcular totales
+    // Filtrar movimientos de períodos anteriores
+    const yesterdayRange = getYesterdayRange();
+    const lastWeekRange = getLastWeekRange();
+    const lastMonthRange = getLastMonthRange();
+    
+    const yesterdaySales = filterMovementsByTypeAndRange(state.movements, 'sale', yesterdayRange);
+    const lastWeekSales = filterMovementsByTypeAndRange(state.movements, 'sale', lastWeekRange);
+    const lastMonthSales = filterMovementsByTypeAndRange(state.movements, 'sale', lastMonthRange);
+    
+    // Calcular totales actuales
     const totalRevenue = sumMovementsAmount(todaySales);
     const totalExpenses = sumMovementsAmount(todayExpenses);
     const netProfit = totalRevenue - totalExpenses;
     
-    // Contar transacciones
+    // Calcular balance efectivo para todo el tiempo
+    const allSales = state.movements.filter(movement => movement.type === 'sale');
+    const allExpenses = state.movements.filter(movement => movement.type === 'expense');
+    const cashBalance = calculateCashBalance(allSales, allExpenses);
     const salesCount = todaySales.length;
     const expensesCount = todayExpenses.length;
     
-    // Calcular tendencias (porcentaje de cambio vs promedio)
-    const avgRevenue = state.movements.filter(m => m.type === 'sale').length > 0 
-      ? state.movements.filter(m => m.type === 'sale').reduce((sum, m) => sum + m.amount, 0) / Math.max(7, state.movements.filter(m => m.type === 'sale').length)
-      : 0;
-    const revenueTrend = avgRevenue > 0 ? ((totalRevenue - avgRevenue) / avgRevenue) * 100 : 0;
+    // Calcular totales de períodos anteriores
+    const yesterdayRevenue = sumMovementsAmount(yesterdaySales);
+    const lastWeekRevenue = sumMovementsAmount(lastWeekSales);
+    const lastMonthRevenue = sumMovementsAmount(lastMonthSales);
+    
+    // Calcular balance efectivo de períodos anteriores
+    const yesterdayExpenses = filterMovementsByTypeAndRange(state.movements, 'expense', yesterdayRange);
+    const lastWeekExpenses = filterMovementsByTypeAndRange(state.movements, 'expense', lastWeekRange);
+    const lastMonthExpenses = filterMovementsByTypeAndRange(state.movements, 'expense', lastMonthRange);
+    
+    const yesterdayCashBalance = calculateCashBalance(yesterdaySales, yesterdayExpenses);
+    const lastWeekCashBalance = calculateCashBalance(lastWeekSales, lastWeekExpenses);
+    const lastMonthCashBalance = calculateCashBalance(lastMonthSales, lastMonthExpenses);
+    
+    // Calcular tendencias (porcentaje de cambio vs ayer)
+    const revenueTrend = calculatePercentageChange(totalRevenue, yesterdayRevenue);
+    const expenseTrend = calculatePercentageChange(totalExpenses, sumMovementsAmount(yesterdayExpenses));
+    const cashBalanceTrend = calculatePercentageChange(cashBalance, yesterdayCashBalance);
+    
+    // Calcular ticket promedio
+    const averageTicket = calculateAverageTicket(todaySales);
+    const yesterdayAverageTicket = calculateAverageTicket(yesterdaySales);
+    
+    // Obtener productos más vendidos
+    const topProducts = getTopSellingProducts(todaySales, state.products, 5);
+    
+    // Calcular velocidad de ventas (asumiendo 8 horas de operación)
+    const salesVelocity = calculateSalesVelocity(todaySales, 8);
     
     return {
+      // Métricas básicas
       revenue: totalRevenue,
       expenses: totalExpenses,
       profit: netProfit,
+      cashBalance,
       salesCount,
       expensesCount,
-      revenueTrend
+      revenueTrend,
+      expenseTrend,
+      cashBalanceTrend,
+      
+      // Métricas avanzadas
+      averageTicket,
+      yesterdayAverageTicket,
+      topProducts,
+      salesVelocity,
+      todaySales,
+      
+      // Datos para comparaciones
+      todayData: {
+        revenue: totalRevenue,
+        salesCount: salesCount,
+        cashBalance: cashBalance
+      },
+      yesterdayData: {
+        revenue: yesterdayRevenue,
+        expenses: sumMovementsAmount(yesterdayExpenses),
+        salesCount: yesterdaySales.length,
+        cashBalance: yesterdayCashBalance
+      },
+      lastWeekData: {
+        revenue: lastWeekRevenue,
+        salesCount: lastWeekSales.length,
+        cashBalance: lastWeekCashBalance
+      },
+      lastMonthData: {
+        revenue: lastMonthRevenue,
+        salesCount: lastMonthSales.length,
+        cashBalance: lastMonthCashBalance
+      }
     };
-  }, [state.movements]);
+  }, [state.movements, state.products]);
 
   // Obtener fecha actual formateada
   const currentDate = new Date();
@@ -72,117 +155,62 @@ const DashboardPage = () => {
               <span className="date-full">{dateString}</span>
             </p>
           </div>
-          <div className="quick-stats">
-            <div className="quick-stat">
-              <span className="stat-icon">📊</span>
-              <span className="stat-value">{state.movements.length}</span>
-              <span className="stat-label">movimientos</span>
-            </div>
-            <div className="quick-stat">
-              <span className="stat-icon">🛍️</span>
-              <span className="stat-value">{dailyMetrics.salesCount}</span>
-              <span className="stat-label">ventas hoy</span>
-            </div>
-          </div>
         </div>
       </div>
       
       <div className="dashboard-content">
-        <div className="dashboard-layout">
-          {/* Columna izquierda - Métricas */}
-          <div className="metrics-column">
-            <div className="metrics-modern">
-              <div className="metric-card revenue-card">
-                <div className="metric-header">
-                  <div className="metric-icon-wrapper">
-                    <span className="metric-icon">💰</span>
-                  </div>
-                  <div className="metric-trend">
-                    {dailyMetrics.revenueTrend > 0 ? (
-                      <span className="trend-up">↑ {Math.abs(dailyMetrics.revenueTrend).toFixed(1)}%</span>
-                    ) : dailyMetrics.revenueTrend < 0 ? (
-                      <span className="trend-down">↓ {Math.abs(dailyMetrics.revenueTrend).toFixed(1)}%</span>
-                    ) : (
-                      <span className="trend-neutral">→ 0%</span>
-                    )}
-                  </div>
-                </div>
-                <div className="metric-body">
-                  <h3 className="metric-title">Ingresos del día</h3>
-                  <div className="metric-value">{formatCurrency(dailyMetrics.revenue)}</div>
-                  <div className="metric-subtitle">{dailyMetrics.salesCount} transacciones</div>
-                </div>
-                <div className="metric-footer">
-                  <div className="progress-bar">
-                    <div className="progress-fill revenue-fill" style={{width: '70%'}}></div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="metric-card expense-card">
-                <div className="metric-header">
-                  <div className="metric-icon-wrapper expense">
-                    <span className="metric-icon">💸</span>
-                  </div>
-                </div>
-                <div className="metric-body">
-                  <h3 className="metric-title">Gastos del día</h3>
-                  <div className="metric-value">{formatCurrency(dailyMetrics.expenses)}</div>
-                  <div className="metric-subtitle">{dailyMetrics.expensesCount} registros</div>
-                </div>
-                <div className="metric-footer">
-                  <div className="progress-bar">
-                    <div className="progress-fill expense-fill" style={{width: '30%'}}></div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className={`metric-card profit-card ${dailyMetrics.profit >= 0 ? 'positive' : 'negative'}`}>
-                <div className="metric-header">
-                  <div className="metric-icon-wrapper profit">
-                    <span className="metric-icon">{dailyMetrics.profit >= 0 ? '📈' : '📉'}</span>
-                  </div>
-                </div>
-                <div className="metric-body">
-                  <h3 className="metric-title">Balance neto</h3>
-                  <div className="metric-value">{formatCurrency(dailyMetrics.profit)}</div>
-                  <div className="metric-subtitle">
-                    {dailyMetrics.profit >= 0 ? 'Ganancia del día' : 'Pérdida del día'}
-                  </div>
-                </div>
-                <div className="metric-footer">
-                  <div className="balance-indicator">
-                    <span className="indicator-dot"></span>
-                    <span className="indicator-text">
-                      {dailyMetrics.profit >= 0 ? 'Resultado positivo' : 'Resultado negativo'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="dashboard-layout-new">
+          {/* Fila superior - Métricas principales */}
+          <div className="metrics-row-main">
+            <IngresosCard
+              revenue={advancedMetrics.revenue}
+              salesCount={advancedMetrics.salesCount}
+              yesterdayRevenue={advancedMetrics.yesterdayData.revenue}
+              trend={advancedMetrics.revenueTrend}
+            />
+            
+            <GastosCard
+              expenses={advancedMetrics.expenses}
+              expensesCount={advancedMetrics.expensesCount}
+              yesterdayExpenses={advancedMetrics.yesterdayData.expenses}
+              trend={advancedMetrics.expenseTrend}
+            />
+            
+            <BalanceEfectivoCard
+              cashBalance={advancedMetrics.cashBalance}
+            />
+
+            {/* Nueva métrica: Ticket Promedio */}
+            <TicketPromedioCard
+              currentTicket={advancedMetrics.averageTicket}
+              previousTicket={advancedMetrics.yesterdayAverageTicket}
+              salesCount={advancedMetrics.salesCount}
+              period="ayer"
+            />
           </div>
 
-          {/* Columna derecha - Gráfico */}
-          <div className="chart-column">
-            <div className="charts-modern">
-              <div className="chart-container">
-                <div className="chart-header">
-                  <div className="chart-title-section">
-                    <h2 className="chart-title">Distribución de ventas por producto</h2>
-                    <div className="chart-subtitle">
-                      Total: {formatCurrency(dailyMetrics.revenue)}
-                    </div>
-                  </div>
-                  <div className="chart-period">Hoy</div>
-                </div>
-                <div className="chart-body">
-                  <SalesByProductPie 
-                    movements={state.movements}
-                    products={state.products}
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Fila intermedia - Métricas avanzadas */}
+          <div className="metrics-row-advanced">
+            {/* Productos más vendidos */}
+            <ProductosTopCard
+              topProducts={advancedMetrics.topProducts}
+              totalSales={advancedMetrics.salesCount}
+            />
+
+
+            {/* Velocidad de ventas */}
+            <VelocidadVentas
+              salesMovements={advancedMetrics.todaySales}
+              salesVelocity={advancedMetrics.salesVelocity}
+            />
+          </div>
+
+          {/* Gráfico principal */}
+          <div className="chart-container">
+            <SalesByProductPie 
+              movements={state.movements}
+              products={state.products}
+            />
           </div>
         </div>
       </div>

@@ -1,0 +1,198 @@
+/**
+ * Estilos para TicketPromedioCard
+ */
+
+.ticket-promedio-card {
+  background: white;
+  border-radius: 20px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: scaleIn 0.5s ease-out 0.2s both;
+}
+
+.ticket-promedio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.ticket-promedio-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+  animation: shimmer 2s infinite;
+}
+
+.ticket-promedio-card .metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.ticket-promedio-card .metric-icon-wrapper.ticket {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.ticket-promedio-card .metric-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.ticket-promedio-card .metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.ticket-promedio-card .trend-positive {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.ticket-promedio-card .trend-negative {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ticket-promedio-card .trend-neutral {
+  color: #6b7280;
+  background: rgba(107, 114, 128, 0.1);
+}
+
+.ticket-promedio-card .metric-body {
+  margin-bottom: var(--spacing-md);
+}
+
+.ticket-promedio-card .metric-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.ticket-promedio-card .metric-value {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  margin: 0 0 var(--spacing-xs) 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-promedio-card .metric-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ticket-promedio-card .metric-footer {
+  margin-top: auto;
+}
+
+.comparison-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+}
+
+.comparison-label {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.comparison-value {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-promedio-card .progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ticket-promedio-card .progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease-out;
+  position: relative;
+}
+
+.ticket-promedio-card .ticket-fill.trend-positive {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.ticket-promedio-card .ticket-fill.trend-negative {
+  background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.ticket-promedio-card .ticket-fill.trend-neutral {
+  background: linear-gradient(90deg, #6b7280 0%, #9ca3af 100%);
+}
+
+/* Animaciones */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ticket-promedio-card {
+    padding: var(--spacing-md);
+    border-radius: 16px;
+  }
+  
+  .ticket-promedio-card .metric-value {
+    font-size: 28px;
+  }
+  
+  .ticket-promedio-card .metric-icon-wrapper.ticket {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .ticket-promedio-card .metric-icon {
+    font-size: 20px;
+  }
+}

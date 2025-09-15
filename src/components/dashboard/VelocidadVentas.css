@@ -1,0 +1,418 @@
+/**
+ * Estilos para VelocidadVentas
+ */
+
+.velocidad-ventas-card {
+  background: white;
+  border-radius: 20px;
+  padding: var(--spacing-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: scaleIn 0.5s ease-out 0.5s both;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.velocidad-ventas-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.velocidad-ventas-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+  animation: shimmer 2s infinite;
+}
+
+.velocidad-ventas-card .metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+}
+
+.velocidad-ventas-card .metric-icon-wrapper.velocity {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.velocidad-ventas-card .metric-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.velocity-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.velocity-badge.high {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.velocity-badge.medium {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.velocity-badge.low {
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+}
+
+.velocity-badge.none {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.velocidad-ventas-card .metric-body {
+  margin-bottom: var(--spacing-lg);
+}
+
+.velocidad-ventas-card .metric-title {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.velocity-main {
+  text-align: center;
+}
+
+.velocity-value {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin-bottom: var(--spacing-xs);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.velocity-unit {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.velocity-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.hourly-chart {
+  flex: 1;
+  margin-bottom: var(--spacing-lg);
+}
+
+.chart-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  height: 120px;
+  padding: 0 var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.02) 0%, transparent 100%);
+  border-radius: 8px;
+}
+
+.hour-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hour-bar:hover {
+  transform: scale(1.05);
+}
+
+.bar-fill {
+  width: 100%;
+  max-width: 12px;
+  background: rgba(107, 114, 128, 0.2);
+  border-radius: 2px 2px 0 0;
+  transition: all 0.5s ease;
+  margin-bottom: 4px;
+}
+
+.hour-bar.active .bar-fill {
+  background: linear-gradient(to top, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.hour-bar.current .bar-fill {
+  background: linear-gradient(to top, #ef4444 0%, #f87171 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.hour-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.current {
+  background: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.legend-dot.active {
+  background: #f59e0b;
+}
+
+.peak-hours {
+  margin-bottom: var(--spacing-lg);
+}
+
+.peak-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.peak-list {
+  display: flex;
+  justify-content: space-around;
+  gap: var(--spacing-sm);
+}
+
+.peak-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  flex: 1;
+  text-align: center;
+  position: relative;
+}
+
+.peak-item.rank-1 {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.peak-item.rank-2 {
+  background: rgba(192, 192, 192, 0.1);
+  border: 1px solid rgba(192, 192, 192, 0.2);
+}
+
+.peak-item.rank-3 {
+  background: rgba(205, 127, 50, 0.1);
+  border: 1px solid rgba(205, 127, 50, 0.2);
+}
+
+.peak-time {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  margin-bottom: 2px;
+}
+
+.peak-sales {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.velocidad-ventas-card .metric-footer {
+  margin-top: auto;
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.stat-item {
+  text-align: center;
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+}
+
+.stat-value {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Animaciones */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .velocidad-ventas-card {
+    padding: var(--spacing-md);
+    border-radius: 16px;
+    min-height: 550px;
+  }
+  
+  .velocidad-ventas-card .metric-icon-wrapper.velocity {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .velocidad-ventas-card .metric-icon {
+    font-size: 20px;
+  }
+  
+  .velocity-value {
+    font-size: 36px;
+  }
+  
+  .chart-bars {
+    height: 100px;
+  }
+  
+  .bar-fill {
+    max-width: 8px;
+  }
+  
+  .hour-label {
+    font-size: 8px;
+  }
+  
+  .peak-list {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .velocity-value {
+    font-size: 28px;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .velocity-unit {
+    font-size: 12px;
+  }
+  
+  .chart-bars {
+    height: 80px;
+    padding: 0;
+  }
+  
+  .bar-fill {
+    max-width: 6px;
+  }
+  
+  .legend-item {
+    font-size: 12px;
+  }
+  
+  .chart-legend {
+    gap: var(--spacing-md);
+  }
+}
