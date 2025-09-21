@@ -10,7 +10,7 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #f8f8f8 0%, #f4f4f4 100%);
   overflow: hidden;
   height: 100vh;
   position: fixed;
