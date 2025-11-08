@@ -63,10 +63,10 @@ export const exportBackup = async () => {
 };
 
 /**
- * Importar backup desde archivo JSON a localStorage
- * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ * Seleccionar y validar archivo de backup
+ * @returns {Promise<{success: boolean, backupInfo?: object, data?: object, error?: string}>}
  */
-export const importBackup = async () => {
+export const selectBackupFile = async () => {
   return new Promise((resolve) => {
     try {
       // Crear input file
@@ -80,7 +80,7 @@ export const importBackup = async () => {
         if (!file) {
           resolve({
             success: false,
-            error: 'No se seleccionó ningún archivo'
+            cancelled: true
           });
           return;
         }
@@ -105,33 +105,18 @@ export const importBackup = async () => {
           const numVentas = datos.movements?.filter(m => m.type === 'sale').length || 0;
           const numGastos = datos.movements?.filter(m => m.type === 'expense').length || 0;
           
-          // Confirmar con el usuario
-          const mensaje = `¿Desea restaurar este backup?\n\n` +
-            `📅 Fecha del backup: ${fechaBackup}\n` +
-            `📦 Productos: ${numProductos}\n` +
-            `💰 Ventas registradas: ${numVentas}\n` +
-            `💸 Gastos registrados: ${numGastos}\n\n` +
-            `⚠️ ADVERTENCIA: Esto sobrescribirá todos los datos actuales.`;
-          
-          const confirmar = confirm(mensaje);
-          
-          if (!confirmar) {
-            resolve({
-              success: false,
-              error: 'Restauración cancelada por el usuario'
-            });
-            return;
-          }
-          
           // Limpiar metadatos antes de guardar
           const datosLimpios = { ...datos };
           delete datosLimpios._metadata;
           
-          // Guardar en localStorage
-          localStorage.setItem('pos_state', JSON.stringify(datosLimpios));
-          
           resolve({
             success: true,
+            backupInfo: {
+              fechaBackup,
+              numProductos,
+              numVentas,
+              numGastos
+            },
             data: datosLimpios
           });
           
@@ -155,13 +140,31 @@ export const importBackup = async () => {
       input.click();
       
     } catch (error) {
-      console.error('Error en importBackup:', error);
+      console.error('Error en selectBackupFile:', error);
       resolve({
         success: false,
         error: error.message
       });
     }
   });
+};
+
+/**
+ * Aplicar el backup restaurado
+ * @param {object} data - Datos del backup
+ * @returns {{success: boolean}}
+ */
+export const applyBackup = (data) => {
+  try {
+    localStorage.setItem('pos_state', JSON.stringify(data));
+    return { success: true };
+  } catch (error) {
+    console.error('Error aplicando backup:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 };
 
 /**
