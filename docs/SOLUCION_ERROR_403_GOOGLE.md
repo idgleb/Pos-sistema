@@ -32,8 +32,8 @@ El error **403 (Forbidden)** en Google OAuth indica que el acceso está denegado
 1. Completa todos los campos requeridos en "OAuth consent screen"
 2. Asegúrate de que:
    - Application home page: `https://idgleb.github.io/Pos-sistema/`
-   - Privacy policy: `https://idgleb.github.io/Pos-sistema/privacy`
-   - Terms of service: `https://idgleb.github.io/Pos-sistema/terms`
+   - Privacy policy: `https://idgleb.github.io/privacy.html`
+   - Terms of service: `https://idgleb.github.io/terms.html`
 3. Haz clic en **"PUBLISH APP"** o **"PUBLICAR APP"**
 4. Espera 15-30 minutos
 5. Intenta conectar de nuevo

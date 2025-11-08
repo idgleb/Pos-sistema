@@ -241,24 +241,24 @@ const Navbar = () => {
     setIsLoadingGoogleDrive(true);
     
     try {
-      const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
-      const result = await uploadBackupToGoogleDrive(data);
-      
-      if (result.success) {
-        setInfoModal({
-          isOpen: true,
-          title: 'Backup guardado en Google Drive',
-          message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
-          variant: 'success'
-        });
-      } else {
-        setInfoModal({
-          isOpen: true,
-          title: 'Error al guardar en Google Drive',
-          message: result.error,
-          variant: 'error'
-        });
-      }
+    const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
+    const result = await uploadBackupToGoogleDrive(data);
+    
+    if (result.success) {
+      setInfoModal({
+        isOpen: true,
+        title: 'Backup guardado en Google Drive',
+        message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
+        variant: 'success'
+      });
+    } else {
+      setInfoModal({
+        isOpen: true,
+        title: 'Error al guardar en Google Drive',
+        message: result.error,
+        variant: 'error'
+      });
+    }
     } finally {
       setIsLoadingGoogleDrive(false);
     }
@@ -407,21 +407,23 @@ const Navbar = () => {
           
           {/* Enlaces legales */}
           <div className="navbar-legal-links">
-            <Link
-              to="/privacy"
+            <a
+              href="https://idgleb.github.io/privacy.html"
               className="navbar-legal-link"
-              onClick={closeMobileMenu}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Privacidad
-            </Link>
+            </a>
             <span className="navbar-legal-separator">•</span>
-            <Link
-              to="/terms"
+            <a
+              href="https://idgleb.github.io/terms.html"
               className="navbar-legal-link"
-              onClick={closeMobileMenu}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Términos
-            </Link>
+            </a>
           </div>
         </div>
         

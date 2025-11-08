@@ -235,10 +235,11 @@ export const signInGoogle = async () => {
     }
     
     // Manejar error "server_error" - ocurre después de aceptar el consentimiento
+    // Este error específicamente ocurre cuando el token falla después de aceptar el consentimiento
     if (error.error === 'server_error' || error.type === 'tokenFailed' || error.idpId === 'google') {
       return {
         success: false,
-        error: 'Error del servidor (server_error). Esto generalmente ocurre porque:\n\n1. Tu email NO está en la lista de "Test users"\n2. La app está en modo "Testing" y solo los test users pueden usar la app\n3. Las URLs no están correctamente configuradas\n\nSolución INMEDIATA:\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Haz clic en "Test users" o "Usuarios de prueba"\n3. Haz clic en "+ ADD USERS"\n4. Agrega tu email de Google\n5. Haz clic en "SAVE"\n6. Espera 5-10 minutos\n7. Recarga la página y vuelve a intentar\n\nO publica la app cambiando el estado a "In production"'
+        error: '❌ Error: server_error (tokenFailed)\n\nEste error ocurre DESPUÉS de que aceptas el consentimiento. El token de autenticación falla.\n\n🔴 POSIBLES CAUSAS:\n\n1. Las URLs no están correctamente configuradas en "Authorized JavaScript origins"\n2. El Client ID no es correcto o no coincide\n3. La app no está verificada y Google está bloqueando el acceso\n4. Hay un problema con los scopes solicitados\n\n✅ SOLUCIÓN PASO A PASO:\n\n1. Verifica "Authorized JavaScript origins":\n   👉 https://console.cloud.google.com/apis/credentials\n   - Abre tu OAuth 2.0 Client ID\n   - Verifica que esté EXACTAMENTE:\n     • http://localhost:3000\n     • https://idgleb.github.io\n   - NO debe tener "/Pos-sistema" al final\n   - Guarda los cambios\n\n2. Verifica el Client ID:\n   - Debe ser: 642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu.apps.googleusercontent.com\n   - Verifica en: src/lib/googleDriveBackup.js línea 7\n\n3. Verifica que Google Drive API esté habilitada:\n   👉 https://console.cloud.google.com/apis/library/drive.googleapis.com\n\n4. Si la app no está verificada:\n   - Ve a: https://console.cloud.google.com/apis/credentials/consent\n   - Completa todos los campos requeridos\n   - Considera verificar la app si planeas usarla en producción\n\n5. Espera 15-30 minutos después de hacer cambios\n\n6. Limpia la caché del navegador (Ctrl+Shift+Delete)\n\n7. Recarga la página completamente (Ctrl+F5)\n\n8. Intenta conectar de nuevo'
       };
     }
     

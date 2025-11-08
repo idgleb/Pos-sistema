@@ -50,8 +50,8 @@ Si quieres que cualquier usuario pueda usar la app sin agregarlos manualmente:
    - App name: "POS System" (o tu nombre preferido)
    - User support email: Tu email
    - Application home page: `https://idgleb.github.io/Pos-sistema/`
-   - Privacy policy: `https://idgleb.github.io/Pos-sistema/privacy`
-   - Terms of service: `https://idgleb.github.io/Pos-sistema/terms`
+   - Privacy policy: `https://idgleb.github.io/privacy.html`
+   - Terms of service: `https://idgleb.github.io/terms.html`
 
 2. **Haz clic en "PUBLISH APP" o "PUBLICAR APP"**
 

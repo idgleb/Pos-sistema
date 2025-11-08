@@ -22,8 +22,8 @@ Debe incluir (en este orden):
 - ✅ App name: "POS System" (o el nombre que prefieras)
 - ✅ User support email: Tu email
 - ✅ Application home page: `https://idgleb.github.io/Pos-sistema/`
-- ✅ Application privacy policy link: `https://idgleb.github.io/Pos-sistema/privacy`
-- ✅ Application terms of service link: `https://idgleb.github.io/Pos-sistema/terms`
+- ✅ Application privacy policy link: `https://idgleb.github.io/privacy.html`
+- ✅ Application terms of service link: `https://idgleb.github.io/terms.html`
 - ✅ Publishing status: **"In production"** (no "Testing")
 
 ### 4. **Scopes**

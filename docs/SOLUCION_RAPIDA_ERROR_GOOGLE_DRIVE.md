@@ -52,8 +52,8 @@ https://idgleb.github.io
 #### Si quieres publicar la app (recomendado):
 1. Completa todos los campos requeridos:
    - Application home page: `https://idgleb.github.io/Pos-sistema/`
-   - Privacy policy: `https://idgleb.github.io/Pos-sistema/privacy`
-   - Terms of service: `https://idgleb.github.io/Pos-sistema/terms`
+   - Privacy policy: `https://idgleb.github.io/privacy.html`
+   - Terms of service: `https://idgleb.github.io/terms.html`
 2. Haz clic en **"PUBLISH APP"**
 3. Sigue el proceso de verificación
 
