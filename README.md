@@ -1,70 +1,75 @@
-# Getting Started with Create React App
+# Sistema POS - Punto de Venta
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema de punto de venta (POS) desarrollado con React y Vite para gestión de productos, ventas, gastos y reportes.
 
-## Available Scripts
+## 🚀 Tecnologías
 
-In the project directory, you can run:
+- **React 19** - Biblioteca de UI
+- **Vite 7** - Build tool y dev server
+- **React Router DOM 7** - Enrutamiento
+- **Chart.js** - Gráficos y visualizaciones
+- **date-fns** - Manipulación de fechas
 
-### `npm start`
+## 📋 Características
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- ✅ Gestión de productos con precios fijos y precios libres
+- ✅ Sistema de punto de venta (POS) con carrito de compras
+- ✅ Registro de gastos y movimientos
+- ✅ Dashboard con métricas y gráficos
+- ✅ Backup y restauración de datos (Google Drive)
+- ✅ Diseño responsive (mobile, tablet, desktop)
+- ✅ Persistencia de datos en localStorage
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Instalación
 
-### `npm test`
+```bash
+# Instalar dependencias
+npm install
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Iniciar servidor de desarrollo
+npm run dev
 
-### `npm run build`
+# Construir para producción
+npm run build
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Vista previa de producción
+npm run preview
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 📁 Estructura del Proyecto
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+src/
+├── app/              # Configuración de la app (rutas, store, App principal)
+├── components/       # Componentes reutilizables
+│   ├── dashboard/    # Componentes del dashboard
+│   └── ui/           # Componentes UI básicos (Modal, Button, etc.)
+├── features/         # Features/páginas principales
+│   ├── pos/          # Punto de venta
+│   ├── products/     # Gestión de productos
+│   ├── expenses/     # Gestión de gastos
+│   ├── movements/    # Movimientos financieros
+│   ├── dashboard/    # Dashboard principal
+│   └── legal/        # Páginas legales (Privacy, Terms)
+├── lib/              # Utilidades y helpers
+└── styles/           # Estilos globales
+```
 
-### `npm run eject`
+## 📝 Scripts Disponibles
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- `npm run dev` - Inicia el servidor de desarrollo en http://localhost:3000
+- `npm run build` - Construye la aplicación para producción
+- `npm run preview` - Previsualiza el build de producción
+- `npm start` - Alias para `npm run dev`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔧 Configuración
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+El proyecto está configurado para desplegarse en GitHub Pages con el path base `/Pos-sistema/`. Esta configuración se encuentra en `vite.config.js`.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📚 Documentación Adicional
 
-## Learn More
+La documentación sobre configuración de Google Drive y otros temas se encuentra en la carpeta `docs/`.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📄 Licencia
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Este proyecto es privado.
