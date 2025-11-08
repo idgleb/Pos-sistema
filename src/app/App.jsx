@@ -32,9 +32,12 @@ const AppContent = () => {
 };
 
 const App = () => {
+  // Usar basename solo en producción (GitHub Pages)
+  const basename = import.meta.env.PROD ? '/Pos-sistema' : '';
+  
   return (
     <StoreProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <AppContent />
       </BrowserRouter>
     </StoreProvider>
