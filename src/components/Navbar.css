@@ -172,9 +172,15 @@
   font-family: inherit;
 }
 
-.navbar-backup-dropdown-item:hover {
+.navbar-backup-dropdown-item:hover:not(:disabled) {
   background-color: var(--color-bg-secondary);
   color: var(--color-text-primary);
+}
+
+.navbar-backup-dropdown-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .navbar-dropdown-icon {

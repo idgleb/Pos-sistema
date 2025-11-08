@@ -11,6 +11,7 @@ import {
 } from '../lib/googleDriveBackup';
 import InfoModal from './ui/InfoModal';
 import BackupRestoreModal from './ui/BackupRestoreModal';
+import GoogleDriveBackupsModal from './ui/GoogleDriveBackupsModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -33,9 +34,14 @@ const Navbar = () => {
     backupData: null
   });
   
+  const [googleDriveBackupsModal, setGoogleDriveBackupsModal] = useState({
+    isOpen: false
+  });
+  
   // Estado de Google Drive
   const [isGoogleDriveConnected, setIsGoogleDriveConnected] = useState(false);
   const [googleUser, setGoogleUser] = useState(null);
+  const [isLoadingGoogleDrive, setIsLoadingGoogleDrive] = useState(false);
   
   // Inicializar Google Drive API
   useEffect(() => {
@@ -230,24 +236,62 @@ const Navbar = () => {
       return;
     }
     
-    const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
-    const result = await uploadBackupToGoogleDrive(data);
+    setIsLoadingGoogleDrive(true);
     
-    if (result.success) {
-      setInfoModal({
-        isOpen: true,
-        title: 'Backup guardado en Google Drive',
-        message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
-        variant: 'success'
-      });
-    } else {
-      setInfoModal({
-        isOpen: true,
-        title: 'Error al guardar en Google Drive',
-        message: result.error,
-        variant: 'error'
-      });
+    try {
+      const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
+      const result = await uploadBackupToGoogleDrive(data);
+      
+      if (result.success) {
+        setInfoModal({
+          isOpen: true,
+          title: 'Backup guardado en Google Drive',
+          message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
+          variant: 'success'
+        });
+      } else {
+        setInfoModal({
+          isOpen: true,
+          title: 'Error al guardar en Google Drive',
+          message: result.error,
+          variant: 'error'
+        });
+      }
+    } finally {
+      setIsLoadingGoogleDrive(false);
     }
+  };
+
+  // Abrir modal de backups de Google Drive
+  const handleRestoreFromGoogleDrive = () => {
+    closeBackupDropdown();
+    
+    if (!isGoogleDriveConnected) {
+      setInfoModal({
+        isOpen: true,
+        title: 'No conectado',
+        message: 'Primero debes conectarte a Google Drive',
+        variant: 'warning'
+      });
+      return;
+    }
+    
+    setGoogleDriveBackupsModal({ isOpen: true });
+  };
+
+  // Cerrar modal de backups de Google Drive
+  const closeGoogleDriveBackupsModal = () => {
+    setGoogleDriveBackupsModal({ isOpen: false });
+  };
+
+  // Manejar selección de backup desde Google Drive
+  const handleSelectGoogleDriveBackup = (backupData) => {
+    // Mostrar modal de confirmación con info del backup
+    setRestoreModal({
+      isOpen: true,
+      backupInfo: backupData.backupInfo,
+      backupData: backupData.data
+    });
   };
 
   return (
@@ -320,9 +364,22 @@ const Navbar = () => {
                     <button
                       className="navbar-backup-dropdown-item"
                       onClick={handleSaveToGoogleDrive}
+                      disabled={isLoadingGoogleDrive}
                     >
-                      <span className="navbar-dropdown-icon">☁️</span>
-                      <span className="navbar-dropdown-text">Guardar en Google Drive</span>
+                      <span className="navbar-dropdown-icon">
+                        {isLoadingGoogleDrive ? '⏳' : '☁️'}
+                      </span>
+                      <span className="navbar-dropdown-text">
+                        {isLoadingGoogleDrive ? 'Guardando...' : 'Guardar en Google Drive'}
+                      </span>
+                    </button>
+                    
+                    <button
+                      className="navbar-backup-dropdown-item"
+                      onClick={handleRestoreFromGoogleDrive}
+                    >
+                      <span className="navbar-dropdown-icon">📥</span>
+                      <span className="navbar-dropdown-text">Restaurar desde Google Drive</span>
                     </button>
                     
                     <button
@@ -393,6 +450,12 @@ const Navbar = () => {
         onClose={closeRestoreModal}
         onConfirm={handleConfirmRestore}
         backupInfo={restoreModal.backupInfo}
+      />
+      
+      <GoogleDriveBackupsModal
+        isOpen={googleDriveBackupsModal.isOpen}
+        onClose={closeGoogleDriveBackupsModal}
+        onSelectBackup={handleSelectGoogleDriveBackup}
       />
     </nav>
   );
