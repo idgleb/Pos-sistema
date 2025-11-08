@@ -225,10 +225,10 @@ export const signInGoogle = async () => {
       };
     }
     
-    if (error.error === 'access_denied') {
+    if (error.error === 'access_denied' || error.status === 403) {
       return {
         success: false,
-        error: 'Acceso denegado. Por favor, acepta los permisos necesarios.'
+        error: 'Acceso denegado (403). Esto puede deberse a:\n\n1. La app está en modo "Testing" y tu email no está en la lista de testers\n2. La app no está publicada (debe estar "In production")\n3. Las URLs no están correctamente configuradas en Google Cloud Console\n\nSolución:\n- Ve a Google Cloud Console → OAuth consent screen\n- Agrega tu email como "Test user" (si está en Testing)\n- O publica la app cambiando el estado a "In production"\n- Verifica que https://idgleb.github.io esté en "Authorized JavaScript origins"'
       };
     }
     
@@ -237,6 +237,14 @@ export const signInGoogle = async () => {
       return {
         success: false,
         error: 'Error de inicialización. Por favor, verifica que las URLs estén correctamente configuradas en Google Cloud Console e intenta de nuevo.'
+      };
+    }
+    
+    // Manejar errores 403 específicos
+    if (error.status === 403 || error.error === 403 || error.message?.includes('403')) {
+      return {
+        success: false,
+        error: 'Error 403: Acceso denegado. Verifica:\n\n1. Google Cloud Console → OAuth consent screen → Tu email está en "Test users"?\n2. La app está publicada ("In production")?\n3. Las URLs están correctas en "Authorized JavaScript origins"?\n\nEspera 15-30 minutos después de hacer cambios y recarga la página.'
       };
     }
     
