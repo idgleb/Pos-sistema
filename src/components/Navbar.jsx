@@ -212,10 +212,12 @@ const Navbar = () => {
           variant: 'success'
         });
       } else if (!result.cancelled) {
+        // Mostrar error detallado
+        const errorMessage = result.error || 'No se pudo conectar a Google Drive';
         setInfoModal({
           isOpen: true,
-          title: 'Error al conectar',
-          message: result.error || 'No se pudo conectar a Google Drive',
+          title: 'Error al conectar con Google Drive',
+          message: errorMessage,
           variant: 'error'
         });
       }

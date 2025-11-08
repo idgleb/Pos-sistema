@@ -215,6 +215,15 @@ export const signInGoogle = async () => {
     };
   } catch (error) {
     console.error('Error en login:', error);
+    console.error('Error details:', {
+      error: error.error,
+      message: error.message,
+      type: error.type,
+      status: error.status,
+      code: error.code,
+      details: error.details,
+      fullError: error
+    });
     
     // Manejar diferentes tipos de errores
     if (error.error === 'popup_closed_by_user' || error.error === 'popup_blocked') {
@@ -229,36 +238,49 @@ export const signInGoogle = async () => {
     if (error.error === 'server_error' || error.type === 'tokenFailed' || error.idpId === 'google') {
       return {
         success: false,
-        error: 'Error del servidor (server_error). Esto generalmente ocurre porque:\n\n1. Tu email (gleb.ursol@davinci.edu.ar) NO está en la lista de "Test users"\n2. La app está en modo "Testing" y solo los test users pueden usar la app\n3. Las URLs no están correctamente configuradas\n\nSolución INMEDIATA:\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Haz clic en "Test users" o "Usuarios de prueba"\n3. Haz clic en "+ ADD USERS"\n4. Agrega: gleb.ursol@davinci.edu.ar\n5. Haz clic en "SAVE"\n6. Espera 5-10 minutos\n7. Recarga la página y vuelve a intentar\n\nO publica la app cambiando el estado a "In production"'
+        error: 'Error del servidor (server_error). Esto generalmente ocurre porque:\n\n1. Tu email NO está en la lista de "Test users"\n2. La app está en modo "Testing" y solo los test users pueden usar la app\n3. Las URLs no están correctamente configuradas\n\nSolución INMEDIATA:\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Haz clic en "Test users" o "Usuarios de prueba"\n3. Haz clic en "+ ADD USERS"\n4. Agrega tu email de Google\n5. Haz clic en "SAVE"\n6. Espera 5-10 minutos\n7. Recarga la página y vuelve a intentar\n\nO publica la app cambiando el estado a "In production"'
       };
     }
     
-    if (error.error === 'access_denied' || error.status === 403) {
+    // Manejar errores 400 (Bad Request)
+    if (error.status === 400 || error.error === 400 || error.code === 400) {
       return {
         success: false,
-        error: 'Acceso denegado (403). Esto puede deberse a:\n\n1. La app está en modo "Testing" y tu email no está en la lista de testers\n2. La app no está publicada (debe estar "In production")\n3. Las URLs no están correctamente configuradas en Google Cloud Console\n\nSolución:\n- Ve a Google Cloud Console → OAuth consent screen\n- Agrega tu email como "Test user" (si está en Testing)\n- O publica la app cambiando el estado a "In production"\n- Verifica que https://idgleb.github.io esté en "Authorized JavaScript origins"'
+        error: 'Error 400: Solicitud incorrecta. Esto puede deberse a:\n\n1. El Client ID no es correcto o no existe\n2. Las URLs no están correctamente configuradas en Google Cloud Console\n3. El scope solicitado no está habilitado\n\nSolución:\n1. Verifica el Client ID en: https://console.cloud.google.com/apis/credentials\n2. Verifica que las URLs estén en "Authorized JavaScript origins":\n   - http://localhost:3000\n   - https://idgleb.github.io\n3. Verifica que Google Drive API esté habilitada\n4. Espera 15-30 minutos después de hacer cambios'
+      };
+    }
+    
+    // Manejar errores 403 (Forbidden)
+    if (error.error === 'access_denied' || error.status === 403 || error.error === 403 || error.code === 403) {
+      return {
+        success: false,
+        error: 'Error 403: Acceso denegado. Esto puede deberse a:\n\n1. La app está en modo "Testing" y tu email NO está en la lista de testers\n2. La app no está publicada (debe estar "In production")\n3. Las URLs no están correctamente configuradas en Google Cloud Console\n\nSolución:\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Si está en "Testing", agrega tu email como "Test user"\n3. O publica la app cambiando el estado a "In production"\n4. Verifica que estas URLs estén en "Authorized JavaScript origins":\n   - http://localhost:3000\n   - https://idgleb.github.io\n5. Espera 15-30 minutos después de hacer cambios\n6. Recarga la página completamente (Ctrl+F5)'
       };
     }
     
     if (error.error === 'idpiframe_initialization_failed' || error.message?.includes('idpiframe')) {
-      // Este error no debería impedir el login con popup
+      // Este error no debería impedir el login con popup, pero si el popup también falla, mostramos el error
       return {
         success: false,
-        error: 'Error de inicialización. Por favor, verifica que las URLs estén correctamente configuradas en Google Cloud Console e intenta de nuevo.'
+        error: 'Error de inicialización del iframe. El popup debería funcionar, pero si no aparece:\n\n1. Verifica que los popups no estén bloqueados\n2. Verifica que las URLs estén correctamente configuradas en Google Cloud Console\n3. Intenta en una ventana de incógnito'
       };
     }
     
-    // Manejar errores 403 específicos
-    if (error.status === 403 || error.error === 403 || error.message?.includes('403')) {
+    // Manejar errores de red
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
       return {
         success: false,
-        error: 'Error 403: Acceso denegado. Verifica:\n\n1. Google Cloud Console → OAuth consent screen → Tu email está en "Test users"?\n2. La app está publicada ("In production")?\n3. Las URLs están correctas en "Authorized JavaScript origins"?\n\nEspera 15-30 minutos después de hacer cambios y recarga la página.'
+        error: 'Error de conexión. Verifica tu conexión a internet e intenta de nuevo.'
       };
     }
+    
+    // Error genérico con detalles
+    const errorMessage = error.error || error.message || error.type || 'Error desconocido';
+    const errorDetails = error.details || error.code || '';
     
     return {
       success: false,
-      error: error.error || error.message || error.type || 'Error desconocido al iniciar sesión. Por favor, recarga la página e intenta de nuevo.\n\nDetalles del error: ' + JSON.stringify(error)
+      error: `Error al iniciar sesión: ${errorMessage}${errorDetails ? `\n\nCódigo: ${errorDetails}` : ''}\n\nPosibles soluciones:\n1. Verifica que estés usando la URL correcta (http://localhost:3000 o https://idgleb.github.io)\n2. Verifica la configuración en Google Cloud Console\n3. Espera 15-30 minutos después de hacer cambios\n4. Recarga la página completamente (Ctrl+F5)\n5. Limpia la caché del navegador\n\nDetalles técnicos: ${JSON.stringify(error, null, 2)}`
     };
   }
 };
