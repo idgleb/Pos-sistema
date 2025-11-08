@@ -345,6 +345,25 @@ const Navbar = () => {
               </div>
             )}
           </div>
+          
+          {/* Enlaces legales */}
+          <div className="navbar-legal-links">
+            <Link
+              to="/privacy"
+              className="navbar-legal-link"
+              onClick={closeMobileMenu}
+            >
+              Privacidad
+            </Link>
+            <span className="navbar-legal-separator">•</span>
+            <Link
+              to="/terms"
+              className="navbar-legal-link"
+              onClick={closeMobileMenu}
+            >
+              Términos
+            </Link>
+          </div>
         </div>
         
         <div className="navbar-mobile-toggle">

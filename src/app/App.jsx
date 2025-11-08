@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import AppRoutes from './routes';
 import StoreProvider from './store/StoreProvider';
 import './App.css';
@@ -28,7 +27,6 @@ const AppContent = () => {
           <main className="app-main">
             <AppRoutes />
           </main>
-          <Footer />
         </div>
   );
 };
