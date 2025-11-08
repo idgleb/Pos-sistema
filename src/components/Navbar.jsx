@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { exportBackup, selectBackupFile, applyBackup } from '../lib/backup';
+import {
+  initGoogleDrive,
+  isConnectedToGoogleDrive,
+  signInGoogle,
+  signOutGoogle,
+  getUserInfo,
+  uploadBackupToGoogleDrive
+} from '../lib/googleDriveBackup';
 import InfoModal from './ui/InfoModal';
 import BackupRestoreModal from './ui/BackupRestoreModal';
 import './Navbar.css';
@@ -24,6 +32,23 @@ const Navbar = () => {
     backupInfo: {},
     backupData: null
   });
+  
+  // Estado de Google Drive
+  const [isGoogleDriveConnected, setIsGoogleDriveConnected] = useState(false);
+  const [googleUser, setGoogleUser] = useState(null);
+  
+  // Inicializar Google Drive API
+  useEffect(() => {
+    initGoogleDrive().then(() => {
+      const connected = isConnectedToGoogleDrive();
+      setIsGoogleDriveConnected(connected);
+      if (connected) {
+        setGoogleUser(getUserInfo());
+      }
+    }).catch(error => {
+      console.error('Error inicializando Google Drive:', error);
+    });
+  }, []);
 
   const navItems = [
     { path: '/', label: 'POS', icon: '🛒' },
@@ -150,6 +175,80 @@ const Navbar = () => {
       });
     }
   };
+  
+  // Conectar/Desconectar Google Drive
+  const handleGoogleDriveConnect = async () => {
+    closeBackupDropdown();
+    
+    if (isGoogleDriveConnected) {
+      // Desconectar
+      const result = await signOutGoogle();
+      if (result.success) {
+        setIsGoogleDriveConnected(false);
+        setGoogleUser(null);
+        setInfoModal({
+          isOpen: true,
+          title: 'Sesión cerrada',
+          message: 'Te has desconectado de Google Drive',
+          variant: 'info'
+        });
+      }
+    } else {
+      // Conectar
+      const result = await signInGoogle();
+      if (result.success) {
+        setIsGoogleDriveConnected(true);
+        setGoogleUser(result.user);
+        setInfoModal({
+          isOpen: true,
+          title: 'Conectado a Google Drive',
+          message: `Bienvenido, ${result.user.name}!\n\nAhora puedes guardar backups en la nube.`,
+          variant: 'success'
+        });
+      } else if (!result.cancelled) {
+        setInfoModal({
+          isOpen: true,
+          title: 'Error al conectar',
+          message: result.error || 'No se pudo conectar a Google Drive',
+          variant: 'error'
+        });
+      }
+    }
+  };
+  
+  // Guardar backup en Google Drive
+  const handleSaveToGoogleDrive = async () => {
+    closeBackupDropdown();
+    
+    if (!isGoogleDriveConnected) {
+      setInfoModal({
+        isOpen: true,
+        title: 'No conectado',
+        message: 'Primero debes conectarte a Google Drive',
+        variant: 'warning'
+      });
+      return;
+    }
+    
+    const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
+    const result = await uploadBackupToGoogleDrive(data);
+    
+    if (result.success) {
+      setInfoModal({
+        isOpen: true,
+        title: 'Backup guardado en Google Drive',
+        message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
+        variant: 'success'
+      });
+    } else {
+      setInfoModal({
+        isOpen: true,
+        title: 'Error al guardar en Google Drive',
+        message: result.error,
+        variant: 'error'
+      });
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -190,7 +289,7 @@ const Navbar = () => {
                   onClick={handleExportBackup}
                 >
                   <span className="navbar-dropdown-icon">💾</span>
-                  <span className="navbar-dropdown-text">Crear Backup</span>
+                  <span className="navbar-dropdown-text">Crear Backup Local</span>
                 </button>
                 <button
                   className="navbar-backup-dropdown-item"
@@ -199,6 +298,50 @@ const Navbar = () => {
                   <span className="navbar-dropdown-icon">📥</span>
                   <span className="navbar-dropdown-text">Restaurar Backup</span>
                 </button>
+                
+                <div className="navbar-backup-divider"></div>
+                
+                {isGoogleDriveConnected ? (
+                  <>
+                    <div className="navbar-backup-user-info">
+                      {googleUser?.imageUrl && (
+                        <img 
+                          src={googleUser.imageUrl} 
+                          alt={googleUser.name}
+                          className="navbar-user-avatar"
+                        />
+                      )}
+                      <div className="navbar-user-details">
+                        <span className="navbar-user-name">{googleUser?.name}</span>
+                        <span className="navbar-user-email">{googleUser?.email}</span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      className="navbar-backup-dropdown-item"
+                      onClick={handleSaveToGoogleDrive}
+                    >
+                      <span className="navbar-dropdown-icon">☁️</span>
+                      <span className="navbar-dropdown-text">Guardar en Google Drive</span>
+                    </button>
+                    
+                    <button
+                      className="navbar-backup-dropdown-item"
+                      onClick={handleGoogleDriveConnect}
+                    >
+                      <span className="navbar-dropdown-icon">🚪</span>
+                      <span className="navbar-dropdown-text">Desconectar Google Drive</span>
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="navbar-backup-dropdown-item navbar-backup-dropdown-item-google"
+                    onClick={handleGoogleDriveConnect}
+                  >
+                    <span className="navbar-dropdown-icon">☁️</span>
+                    <span className="navbar-dropdown-text">Conectar Google Drive</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
