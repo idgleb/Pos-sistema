@@ -3,8 +3,8 @@
  * Usa Google Drive API v3
  */
 
-// ⚠️ CONFIGURACIÓN: Reemplaza esto con tu Client ID de Google Cloud Console
-const CLIENT_ID = 'TU_CLIENT_ID_AQUI.apps.googleusercontent.com';
+// ✅ CONFIGURACIÓN: Client ID de Google Cloud Console
+const CLIENT_ID = '642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu.apps.googleusercontent.com';
 
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
