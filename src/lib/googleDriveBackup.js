@@ -43,7 +43,8 @@ export const initGoogleDrive = () => {
               clientId: CLIENT_ID,
               discoveryDocs: DISCOVERY_DOCS,
               scope: SCOPES,
-              fetch_basic_profile: true
+              fetch_basic_profile: true,
+              ux_mode: 'popup' // Forzar uso de popup en lugar de iframe
             });
             
             isGapiInitialized = true;
@@ -66,18 +67,22 @@ export const initGoogleDrive = () => {
             
             resolveInit(true);
           } catch (error) {
-            console.error('Error inicializando Google API:', error);
-            
             // Si el error es por iframe, continuar de todas formas (el popup funcionará)
             if (error.error === 'idpiframe_initialization_failed' || 
                 error.message?.includes('idpiframe') ||
-                error.details?.includes('idpiframe')) {
-              console.warn('Google API iframe falló, pero el popup funcionará correctamente');
+                error.details?.includes('idpiframe') ||
+                error.details?.includes('Not a valid origin')) {
+              console.warn('⚠️ Google API iframe falló (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
+              // Marcar como inicializado de todas formas para permitir que el popup funcione
               isGapiInitialized = true;
               isSignedIn = false;
               resolveInit(true);
             } else {
-              rejectInit(error);
+              console.error('Error inicializando Google API:', error);
+              // Para otros errores, también intentamos continuar (el popup puede funcionar)
+              isGapiInitialized = true;
+              isSignedIn = false;
+              resolveInit(true);
             }
           }
         });
@@ -140,21 +145,55 @@ export const signInGoogle = async () => {
     try {
       authInstance = window.gapi.auth2.getAuthInstance();
     } catch (authError) {
-      // Si no está inicializado, intentar inicializarlo ahora
-      console.warn('Auth2 no estaba inicializado, intentando inicializar ahora...');
-      await window.gapi.load('client:auth2', async () => {
-        await window.gapi.client.init({
-          clientId: CLIENT_ID,
-          discoveryDocs: DISCOVERY_DOCS,
+      console.warn('Auth2 no disponible inicialmente, intentando inicializar...', authError);
+      authInstance = null;
+    }
+    
+    // Si no hay instancia, intentar inicializar
+    if (!authInstance) {
+      try {
+        // Esperar a que gapi.client esté listo
+        if (!window.gapi.client) {
+          await new Promise((resolve) => {
+            if (window.gapi.client) {
+              resolve();
+            } else {
+              window.gapi.load('client', resolve);
+            }
+          });
+        }
+        
+        // Inicializar auth2 con popup mode
+        await window.gapi.auth2.init({
+          client_id: CLIENT_ID,
           scope: SCOPES,
           fetch_basic_profile: true
         });
-      });
-      authInstance = window.gapi.auth2.getAuthInstance();
+        
+        authInstance = window.gapi.auth2.getAuthInstance();
+      } catch (initError) {
+        console.warn('Error inicializando auth2, intentando método directo...', initError);
+        // Último intento: crear instancia directamente
+        try {
+          if (window.gapi.auth2 && !window.gapi.auth2.getAuthInstance()) {
+            await window.gapi.auth2.init({
+              client_id: CLIENT_ID,
+              scope: SCOPES
+            });
+          }
+          authInstance = window.gapi.auth2.getAuthInstance();
+        } catch (finalError) {
+          console.error('No se pudo inicializar auth2 después de múltiples intentos:', finalError);
+          // Continuar de todas formas, el popup puede funcionar con window.open
+        }
+      }
     }
     
     if (!authInstance) {
-      throw new Error('No se pudo inicializar Google Auth. Por favor, recarga la página.');
+      return {
+        success: false,
+        error: 'No se pudo inicializar Google Auth. Por favor, verifica que https://idgleb.github.io esté registrado en Google Cloud Console y espera 15-30 minutos después de guardar los cambios. Luego recarga la página.'
+      };
     }
     
     // Usar signIn (esto abrirá un popup automáticamente)

@@ -23,11 +23,11 @@ const AppContent = () => {
 
   return (
     <div className={`app ${isDashboard ? 'app-dashboard' : ''}`}>
-      <Navbar />
-      <main className="app-main">
-        <AppRoutes />
-      </main>
-    </div>
+          <Navbar />
+          <main className="app-main">
+            <AppRoutes />
+          </main>
+        </div>
   );
 };
 

@@ -249,7 +249,7 @@ const ProductsPage = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="product-info">
                   <h3 className="product-name">{product.name}</h3>
                   <p className={`product-price ${product.isFreePrice ? 'product-price--free' : ''}`}>
