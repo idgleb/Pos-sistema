@@ -78,6 +78,12 @@ const appReducer = (state, action) => {
         products: state.products.filter(product => product.id !== action.payload)
       };
       
+    case ACTION_TYPES.PRODUCTS_REORDER:
+      return {
+        ...state,
+        products: action.payload
+      };
+      
     // === CARRITO ===
     case ACTION_TYPES.CART_ADD_ITEM:
       const existingItem = state.cart.find(item => 
@@ -193,6 +199,7 @@ export const StoreProvider = ({ children }) => {
     addProduct: (product) => dispatch({ type: ACTION_TYPES.PRODUCTS_ADD, payload: product }),
     updateProduct: (product) => dispatch({ type: ACTION_TYPES.PRODUCTS_UPDATE, payload: product }),
     deleteProduct: (productId) => dispatch({ type: ACTION_TYPES.PRODUCTS_DELETE, payload: productId }),
+    reorderProducts: (products) => dispatch({ type: ACTION_TYPES.PRODUCTS_REORDER, payload: products }),
     
     // Carrito
     addToCart: (productId, qty = 1, customPrice = null) => dispatch({ 

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useStore } from '../../app/store/StoreProvider';
 import Button from '../../components/ui/Button';
+import PaymentSuccessModal from './PaymentSuccessModal';
 import './PaymentButtons.css';
 
 const PaymentButtons = () => {
   const { state, actions } = useStore();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [paymentData, setPaymentData] = useState(null);
 
   const getCartTotal = () => {
     return state.cart.reduce((total, item) => {
@@ -65,13 +68,9 @@ const PaymentButtons = () => {
       // Limpiar el carrito
       actions.clearCart();
 
-      // Mostrar mensaje de éxito
-      const methodText = method === 'cash' ? 'Efectivo' : 'Tarjeta';
-      alert(`✅ Pago procesado exitosamente\nMétodo: ${methodText}\nTotal: ${new Intl.NumberFormat('es-AR', {
-        style: 'currency',
-        currency: 'ARS',
-        minimumFractionDigits: 2
-      }).format(total / 100)}`);
+      // Mostrar modal de éxito
+      setPaymentData({ method, total });
+      setShowSuccessModal(true);
 
     } catch (error) {
       console.error('Error procesando pago:', error);
@@ -81,37 +80,50 @@ const PaymentButtons = () => {
     }
   };
 
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setPaymentData(null);
+  };
+
   const total = getCartTotal();
   const hasItems = state.cart.length > 0;
 
   return (
-    <div className="payment-buttons">
-      <div className="payment-actions">
-        <Button
-          variant="success"
-          size="lg"
-          onClick={() => handlePayment('cash')}
-          disabled={!hasItems || isProcessing}
-          loading={isProcessing}
-          className="payment-btn payment-btn--cash"
-        >
-          <span className="payment-icon">💵</span>
-          <span className="payment-text">Pagar Efectivo</span>
-        </Button>
+    <>
+      <div className="payment-buttons">
+        <div className="payment-actions">
+          <Button
+            variant="success"
+            size="lg"
+            onClick={() => handlePayment('cash')}
+            disabled={!hasItems || isProcessing}
+            loading={isProcessing}
+            className="payment-btn payment-btn--cash"
+          >
+            <span className="payment-icon">💵</span>
+            <span className="payment-text">Pagar Efectivo</span>
+          </Button>
 
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => handlePayment('card')}
-          disabled={!hasItems || isProcessing}
-          loading={isProcessing}
-          className="payment-btn payment-btn--card"
-        >
-          <span className="payment-icon">💳</span>
-          <span className="payment-text">Pagar Tarjeta</span>
-        </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => handlePayment('card')}
+            disabled={!hasItems || isProcessing}
+            loading={isProcessing}
+            className="payment-btn payment-btn--card"
+          >
+            <span className="payment-icon">💳</span>
+            <span className="payment-text">Pagar Tarjeta</span>
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <PaymentSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        paymentData={paymentData}
+      />
+    </>
   );
 };
 

@@ -121,8 +121,21 @@ const Cart = () => {
         ) : (
           <>
             <div className="cart-items">
-              {state.cart.map(item => (
+              {state.cart.map(item => {
+                const product = getProductById(item.productId);
+                return (
                 <div key={item.productId} className="cart-item">
+                  {/* Imagen del producto */}
+                  <div className="item-image">
+                    {product?.imageDataUrl ? (
+                      <img src={product.imageDataUrl} alt={getItemName(item)} />
+                    ) : (
+                      <div className="item-image-placeholder">
+                        <span>📦</span>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="item-info">
                     <h4 className="item-name">{getItemName(item)}</h4>
                     <p className="item-price">
@@ -169,7 +182,8 @@ const Cart = () => {
                     </Button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="cart-total">

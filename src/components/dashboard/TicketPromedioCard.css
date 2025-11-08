@@ -8,9 +8,11 @@
   padding: var(--spacing-lg);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  position: relative !important;
   overflow: hidden;
-  animation: scaleIn 0.5s ease-out 0.2s both;
+  width: 100% !important;
+  height: auto !important;
+  box-sizing: border-box !important;
 }
 
 .ticket-promedio-card:hover {

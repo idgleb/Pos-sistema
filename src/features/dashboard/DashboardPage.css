@@ -3,7 +3,7 @@
  */
 
 .dashboard-page {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: 0;
   width: 100%;
@@ -13,12 +13,9 @@
   background: linear-gradient(180deg, #f8f8f8 0%, #f4f4f4 100%);
   overflow: hidden;
   height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: relative;
   z-index: 1;
+  flex: 1;
 }
 
 /* Header moderno con saludo personalizado */
@@ -27,7 +24,7 @@
   border-radius: 20px;
   padding: var(--spacing-md);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin: calc(64px + var(--spacing-md)) var(--spacing-xs) var(--spacing-lg) var(--spacing-xs);
+  margin: calc(64px + var(--spacing-md)) var(--spacing-md) var(--spacing-lg) var(--spacing-md);
   animation: fadeInDown 0.5s ease-out;
   flex-shrink: 0;
 }
@@ -111,15 +108,12 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: calc(var(--spacing-3xl) + var(--spacing-3xl) + var(--spacing-xl));
+  padding-bottom: var(--spacing-xl);
   padding-left: var(--spacing-md);
   padding-right: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
-
+  padding-top: 0;
   min-height: 0;
   box-sizing: border-box;
-  height: calc(100vh - 80px - 24px);
-  max-height: calc(100vh - 80px - 24px);
 }
 
 .dashboard-content::-webkit-scrollbar {
@@ -149,40 +143,57 @@
 
 /* Nuevo layout mejorado */
 .dashboard-layout-new {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--spacing-lg) !important;
+  width: 100% !important;
+  position: relative !important;
 }
 
 /* Fila de métricas principales */
 .metrics-row-main {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--spacing-lg);
-  animation: fadeInUp 0.5s ease-out 0.1s both;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: var(--spacing-lg) !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.metrics-row-main > * {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
 }
 
 /* Fila de métricas avanzadas */
 .metrics-row-advanced {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: var(--spacing-lg);
-  animation: fadeInUp 0.5s ease-out 0.2s both;
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: var(--spacing-lg) !important;
+  width: 100% !important;
+  position: relative !important;
+}
+
+.metrics-row-advanced > * {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
 }
 
 /* Contenedor del gráfico principal */
 .chart-container {
   animation: fadeInUp 0.5s ease-out 0.3s both;
-  margin-top: var(--spacing-lg);
   background: white;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: visible;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   padding: var(--spacing-lg);
   height: auto;
+  width: 100% !important;
+  min-height: 400px;
 }
 
 /* Métricas modernas con cards glassmorphism */
@@ -471,7 +482,8 @@
   }
   
   .metrics-row-main {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: var(--spacing-md);
   }
   
   .metrics-row-advanced {
@@ -489,11 +501,12 @@
   }
   
   .metrics-row-main {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--spacing-md);
   }
   
   .metrics-row-advanced {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: var(--spacing-md);
   }
 }
@@ -506,12 +519,10 @@
   }
   
   .dashboard-content {
-    padding-bottom: calc(var(--spacing-2xl) + var(--spacing-2xl) + var(--spacing-lg));
+    padding-bottom: var(--spacing-xl);
     padding-left: var(--spacing-xs);
     padding-right: var(--spacing-xs);
-    padding-top: var(--spacing-xs);
-    height: calc(100vh - 72px - 24px);
-    max-height: calc(100vh - 72px - 24px);
+    padding-top: 0;
   }
   
   .header-content {
@@ -554,12 +565,12 @@
   }
   
   .metrics-row-main {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: var(--spacing-md);
   }
   
   .metrics-row-advanced {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: var(--spacing-md);
   }
 }
@@ -570,12 +581,10 @@
   }
   
   .dashboard-content {
-    padding-bottom: calc(var(--spacing-2xl) + var(--spacing-2xl) + var(--spacing-lg));
+    padding-bottom: var(--spacing-xl);
     padding-left: var(--spacing-sm);
     padding-right: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    height: calc(100vh - 64px - 24px);
-    max-height: calc(100vh - 64px - 24px);
+    padding-top: 0;
   }
   
   .greeting {

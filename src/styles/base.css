@@ -18,6 +18,7 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
 }
 
 body {
@@ -26,10 +27,28 @@ body {
     sans-serif;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden; /* Evitar scroll horizontal */
+}
+
+/* Aplicar overflow hidden solo cuando NO estamos en dashboard */
+body:not(.dashboard-active) {
+  overflow: hidden;
+}
+
+html:not(.dashboard-active) {
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  width: 100%;
+}
+
+/* Aplicar overflow hidden al root solo cuando NO estamos en dashboard */
+body:not(.dashboard-active) #root {
+  overflow: hidden;
 }
 
 /* Variables CSS */

@@ -3,12 +3,16 @@
  */
 
 .app {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden; /* Evitar scroll horizontal */
+}
+
+/* Aplicar overflow hidden solo cuando NO es dashboard */
+.app:not(.app-dashboard) {
+  overflow: hidden;
 }
 
 .app-main {
@@ -17,13 +21,27 @@
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  min-width: 0; /* Permitir que se encoja */
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Excluir el dashboard de los estilos de app-main */
+/* Overflow hidden para páginas que no son dashboard */
+.app:not(.app-dashboard) .app-main {
+  overflow: hidden;
+}
+
+/* Estilos específicos cuando el dashboard está activo */
+.app-dashboard .app-main {
+  overflow: visible;
+}
+
+/* Estilos para el dashboard */
 .app-main > .dashboard-page {
-  display: block;
-  flex: none;
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: 100vh;
+  width: 100%;
 }
 
 /* Estilos para las páginas placeholder */
