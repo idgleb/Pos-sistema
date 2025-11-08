@@ -225,6 +225,14 @@ export const signInGoogle = async () => {
       };
     }
     
+    // Manejar error "server_error" - ocurre después de aceptar el consentimiento
+    if (error.error === 'server_error' || error.type === 'tokenFailed' || error.idpId === 'google') {
+      return {
+        success: false,
+        error: 'Error del servidor (server_error). Esto generalmente ocurre porque:\n\n1. Tu email (gleb.ursol@davinci.edu.ar) NO está en la lista de "Test users"\n2. La app está en modo "Testing" y solo los test users pueden usar la app\n3. Las URLs no están correctamente configuradas\n\nSolución INMEDIATA:\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Haz clic en "Test users" o "Usuarios de prueba"\n3. Haz clic en "+ ADD USERS"\n4. Agrega: gleb.ursol@davinci.edu.ar\n5. Haz clic en "SAVE"\n6. Espera 5-10 minutos\n7. Recarga la página y vuelve a intentar\n\nO publica la app cambiando el estado a "In production"'
+      };
+    }
+    
     if (error.error === 'access_denied' || error.status === 403) {
       return {
         success: false,
@@ -250,7 +258,7 @@ export const signInGoogle = async () => {
     
     return {
       success: false,
-      error: error.error || error.message || 'Error desconocido al iniciar sesión. Por favor, recarga la página e intenta de nuevo.'
+      error: error.error || error.message || error.type || 'Error desconocido al iniciar sesión. Por favor, recarga la página e intenta de nuevo.\n\nDetalles del error: ' + JSON.stringify(error)
     };
   }
 };
