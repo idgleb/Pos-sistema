@@ -7,6 +7,8 @@ import ExpensesPage from '../features/expenses/ExpensesPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
 import MovementsPage from '../features/movements/MovementsPage';
 import ProductsPage from '../features/products/ProductsPage';
+import PrivacyPolicyPage from '../features/legal/PrivacyPolicyPage';
+import TermsOfServicePage from '../features/legal/TermsOfServicePage';
 
 const AppRoutes = () => {
   return (
@@ -16,6 +18,8 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/movimientos" element={<MovementsPage />} />
       <Route path="/productos" element={<ProductsPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
     </Routes>
   );
 };
