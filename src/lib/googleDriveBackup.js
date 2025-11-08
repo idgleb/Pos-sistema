@@ -32,40 +32,83 @@ export const initGoogleDrive = () => {
       }
     }
     
+    // Verificar si el script ya está cargado
+    const existingScript = document.querySelector('script[src="https://apis.google.com/js/api.js"]');
+    
+    const initGapi = async () => {
+      return new Promise((resolveInit, rejectInit) => {
+        window.gapi.load('client:auth2', async () => {
+          try {
+            await window.gapi.client.init({
+              clientId: CLIENT_ID,
+              discoveryDocs: DISCOVERY_DOCS,
+              scope: SCOPES,
+              fetch_basic_profile: true
+            });
+            
+            isGapiInitialized = true;
+            
+            try {
+              // Intentar obtener la instancia de auth (puede fallar en algunos entornos)
+              const authInstance = window.gapi.auth2.getAuthInstance();
+              isSignedIn = authInstance.isSignedIn.get();
+              
+              // Escuchar cambios en el estado de autenticación
+              authInstance.isSignedIn.listen((signedIn) => {
+                isSignedIn = signedIn;
+              });
+            } catch (authError) {
+              // Si falla la inicialización de auth2 (por ejemplo, iframe bloqueado),
+              // no es crítico, solo significa que no podemos verificar el estado inicial
+              console.warn('No se pudo inicializar auth2 (esto es normal en algunos entornos):', authError);
+              isSignedIn = false;
+            }
+            
+            resolveInit(true);
+          } catch (error) {
+            console.error('Error inicializando Google API:', error);
+            
+            // Si el error es por iframe, continuar de todas formas (el popup funcionará)
+            if (error.error === 'idpiframe_initialization_failed' || 
+                error.message?.includes('idpiframe') ||
+                error.details?.includes('idpiframe')) {
+              console.warn('Google API iframe falló, pero el popup funcionará correctamente');
+              isGapiInitialized = true;
+              isSignedIn = false;
+              resolveInit(true);
+            } else {
+              rejectInit(error);
+            }
+          }
+        });
+      });
+    };
+    
+    if (existingScript) {
+      // Script ya existe, solo inicializar
+      if (window.gapi) {
+        initGapi().then(resolve).catch(reject);
+      } else {
+        // Esperar a que el script se cargue
+        existingScript.onload = () => {
+          initGapi().then(resolve).catch(reject);
+        };
+      }
+      return;
+    }
+    
     // Cargar el script de GAPI
     const script = document.createElement('script');
     script.src = 'https://apis.google.com/js/api.js';
+    script.async = true;
+    script.defer = true;
     script.onload = () => {
-      window.gapi.load('client:auth2', async () => {
-        try {
-          await window.gapi.client.init({
-            clientId: CLIENT_ID,
-            discoveryDocs: DISCOVERY_DOCS,
-            scope: SCOPES
-          });
-          
-          isGapiInitialized = true;
-          
-          // Verificar estado inicial
-          const authInstance = window.gapi.auth2.getAuthInstance();
-          isSignedIn = authInstance.isSignedIn.get();
-          
-          // Escuchar cambios en el estado de autenticación
-          authInstance.isSignedIn.listen((signedIn) => {
-            isSignedIn = signedIn;
-          });
-          
-          resolve(true);
-        } catch (error) {
-          console.error('Error inicializando Google API:', error);
-          reject(error);
-        }
-      });
+      initGapi().then(resolve).catch(reject);
     };
     script.onerror = () => {
-      reject(new Error('Error cargando Google API'));
+      reject(new Error('Error cargando Google API. Verifica tu conexión a internet.'));
     };
-    document.body.appendChild(script);
+    document.head.appendChild(script);
   });
   
   return gapiInitPromise;
@@ -87,11 +130,40 @@ export const signInGoogle = async () => {
       await initGoogleDrive();
     }
     
-    const authInstance = window.gapi.auth2.getAuthInstance();
-    await authInstance.signIn();
+    // Verificar que gapi esté disponible
+    if (!window.gapi) {
+      throw new Error('Google API no está disponible. Recarga la página e intenta de nuevo.');
+    }
     
-    const user = authInstance.currentUser.get();
-    const profile = user.getBasicProfile();
+    // Intentar obtener la instancia de auth2
+    let authInstance;
+    try {
+      authInstance = window.gapi.auth2.getAuthInstance();
+    } catch (authError) {
+      // Si no está inicializado, intentar inicializarlo ahora
+      console.warn('Auth2 no estaba inicializado, intentando inicializar ahora...');
+      await window.gapi.load('client:auth2', async () => {
+        await window.gapi.client.init({
+          clientId: CLIENT_ID,
+          discoveryDocs: DISCOVERY_DOCS,
+          scope: SCOPES,
+          fetch_basic_profile: true
+        });
+      });
+      authInstance = window.gapi.auth2.getAuthInstance();
+    }
+    
+    if (!authInstance) {
+      throw new Error('No se pudo inicializar Google Auth. Por favor, recarga la página.');
+    }
+    
+    // Usar signIn (esto abrirá un popup automáticamente)
+    const googleUser = await authInstance.signIn({
+      prompt: 'select_account'
+    });
+    
+    const profile = googleUser.getBasicProfile();
+    isSignedIn = true;
     
     return {
       success: true,
@@ -105,16 +177,33 @@ export const signInGoogle = async () => {
   } catch (error) {
     console.error('Error en login:', error);
     
-    if (error.error === 'popup_closed_by_user') {
+    // Manejar diferentes tipos de errores
+    if (error.error === 'popup_closed_by_user' || error.error === 'popup_blocked') {
       return {
         success: false,
-        cancelled: true
+        cancelled: true,
+        error: 'El popup fue bloqueado o cerrado. Por favor, permite popups para este sitio e intenta de nuevo.'
+      };
+    }
+    
+    if (error.error === 'access_denied') {
+      return {
+        success: false,
+        error: 'Acceso denegado. Por favor, acepta los permisos necesarios.'
+      };
+    }
+    
+    if (error.error === 'idpiframe_initialization_failed' || error.message?.includes('idpiframe')) {
+      // Este error no debería impedir el login con popup
+      return {
+        success: false,
+        error: 'Error de inicialización. Por favor, verifica que las URLs estén correctamente configuradas en Google Cloud Console e intenta de nuevo.'
       };
     }
     
     return {
       success: false,
-      error: error.error || error.message
+      error: error.error || error.message || 'Error desconocido al iniciar sesión. Por favor, recarga la página e intenta de nuevo.'
     };
   }
 };
