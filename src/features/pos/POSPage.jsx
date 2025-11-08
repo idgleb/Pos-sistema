@@ -11,42 +11,53 @@ const POSPage = () => {
       <div style={{
         background: 'linear-gradient(135deg, #082a9a 0%, #1d4ed8 100%)',
         color: 'white',
-        padding: '12px 16px',
+        padding: '16px 20px',
         textAlign: 'center',
         fontSize: '14px',
-        lineHeight: '1.5',
+        lineHeight: '1.6',
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <strong>POS Sistema</strong> - Sistema de Punto de Venta gratuito que funciona completamente en tu navegador. 
-          Gestiona productos, ventas, gastos y movimientos de tu negocio. 
-          Incluye funcionalidad de backup en Google Drive para proteger tus datos.
-          {' '}
-          <a 
-            href="https://idgleb.github.io/privacy.html" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ 
-              color: '#6dd5ed', 
-              textDecoration: 'underline',
-              fontWeight: 'bold'
-            }}
-          >
-            Política de Privacidad
-          </a>
-          {' • '}
-          <a 
-            href="https://idgleb.github.io/terms.html" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{ 
-              color: '#6dd5ed', 
-              textDecoration: 'underline',
-              fontWeight: 'bold'
-            }}
-          >
-            Términos de Servicio
-          </a>
+          <div style={{ marginBottom: '8px' }}>
+            <strong style={{ fontSize: '16px' }}>POS Sistema</strong> - Sistema de Punto de Venta gratuito
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Funcionalidad:</strong> Gestiona productos, ventas, gastos y movimientos de tu negocio. 
+            Funciona completamente en tu navegador, todos los datos se almacenan localmente en tu dispositivo.
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Uso de Google Drive:</strong> La aplicación solicita acceso a Google Drive únicamente para 
+            permitirte crear backups de tus datos de negocio en tu propia cuenta de Google Drive. 
+            Esto te permite proteger y restaurar tus datos cuando lo necesites. 
+            Los datos se almacenan en una carpeta privada "POS Backups" en tu Google Drive.
+          </div>
+          <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.2)' }}>
+            <a 
+              href="https://idgleb.github.io/privacy.html" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#6dd5ed', 
+                textDecoration: 'underline',
+                fontWeight: 'bold',
+                marginRight: '16px'
+              }}
+            >
+              📄 Política de Privacidad
+            </a>
+            <a 
+              href="https://idgleb.github.io/terms.html" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                color: '#6dd5ed', 
+                textDecoration: 'underline',
+                fontWeight: 'bold'
+              }}
+            >
+              📋 Términos de Servicio
+            </a>
+          </div>
         </div>
       </div>
       
