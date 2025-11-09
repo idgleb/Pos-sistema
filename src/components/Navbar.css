@@ -260,34 +260,73 @@
   color: white;
 }
 
-/* Enlaces legales */
-.navbar-legal-links {
+/* Enlaces legales - Dropdown */
+.navbar-legal-container {
+  position: relative;
+}
+
+.navbar-legal-btn {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
-  margin-left: var(--spacing-md);
-  padding-left: var(--spacing-md);
-  border-left: 1px solid var(--color-border);
-}
-
-.navbar-legal-link {
-  font-size: 11px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
   color: var(--color-text-secondary);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-  white-space: nowrap;
+  background-color: transparent;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-family: inherit;
 }
 
-.navbar-legal-link:hover {
+.navbar-legal-btn:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.navbar-legal-btn--open {
+  background-color: var(--color-primary-light);
   color: var(--color-primary);
-  text-decoration: underline;
 }
 
-.navbar-legal-separator {
-  font-size: 11px;
+.navbar-legal-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xs);
+  z-index: 1001;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.navbar-legal-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  border: none;
   color: var(--color-text-secondary);
-  user-select: none;
-  opacity: 0.6;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.navbar-legal-dropdown-item:hover {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  text-decoration: none;
 }
 
 .navbar-mobile-toggle {
@@ -391,15 +430,28 @@
   }
   
   /* Enlaces legales en móvil */
-  .navbar-legal-links {
+  .navbar-legal-container {
     width: 100%;
-    margin-left: 0;
-    padding-left: 0;
-    border-left: none;
-    border-top: 1px solid var(--color-border);
-    padding-top: var(--spacing-sm);
-    margin-top: var(--spacing-sm);
-    justify-content: center;
+    margin-top: var(--spacing-xs);
+  }
+  
+  .navbar-legal-btn {
+    width: 100%;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .navbar-legal-dropdown {
+    position: static;
+    margin-top: var(--spacing-xs);
+    animation: none;
+    width: 100%;
+  }
+  
+  .navbar-legal-dropdown-item {
+    padding: var(--spacing-md);
   }
   
   .navbar-mobile-toggle {

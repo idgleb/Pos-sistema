@@ -18,7 +18,9 @@ const Navbar = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isBackupDropdownOpen, setIsBackupDropdownOpen] = useState(false);
+  const [isLegalDropdownOpen, setIsLegalDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const legalDropdownRef = useRef(null);
   
   // Estados para modales
   const [infoModal, setInfoModal] = useState({
@@ -87,11 +89,22 @@ const Navbar = () => {
     setIsBackupDropdownOpen(false);
   };
 
-  // Cerrar dropdown al hacer clic fuera
+  const toggleLegalDropdown = () => {
+    setIsLegalDropdownOpen(!isLegalDropdownOpen);
+  };
+
+  const closeLegalDropdown = () => {
+    setIsLegalDropdownOpen(false);
+  };
+
+  // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         closeBackupDropdown();
+      }
+      if (legalDropdownRef.current && !legalDropdownRef.current.contains(event.target)) {
+        closeLegalDropdown();
       }
     };
 
@@ -405,25 +418,52 @@ const Navbar = () => {
             )}
           </div>
           
-          {/* Enlaces legales */}
-          <div className="navbar-legal-links">
-            <a
-              href="https://idgleb.github.io/privacy.html"
-              className="navbar-legal-link"
-              target="_blank"
-              rel="noopener noreferrer"
+          {/* Botón de Enlaces Legales con Dropdown */}
+          <div className="navbar-legal-container" ref={legalDropdownRef}>
+            <button
+              className={`navbar-legal-btn ${isLegalDropdownOpen ? 'navbar-legal-btn--open' : ''}`}
+              onClick={toggleLegalDropdown}
+              aria-label="Enlaces legales"
             >
-              Privacidad
-            </a>
-            <span className="navbar-legal-separator">•</span>
-            <a
-              href="https://idgleb.github.io/terms.html"
-              className="navbar-legal-link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Términos
-            </a>
+              <span className="navbar-icon">ℹ️</span>
+              <span className="navbar-label">Info</span>
+              <span className="navbar-dropdown-arrow">{isLegalDropdownOpen ? '▲' : '▼'}</span>
+            </button>
+            
+            {isLegalDropdownOpen && (
+              <div className="navbar-legal-dropdown">
+                <a
+                  href="https://idgleb.github.io/Pos-sistema/home.html"
+                  className="navbar-legal-dropdown-item"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeLegalDropdown}
+                >
+                  <span className="navbar-dropdown-icon">🏠</span>
+                  <span className="navbar-dropdown-text">Home</span>
+                </a>
+                <a
+                  href="https://idgleb.github.io/privacy.html"
+                  className="navbar-legal-dropdown-item"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeLegalDropdown}
+                >
+                  <span className="navbar-dropdown-icon">📄</span>
+                  <span className="navbar-dropdown-text">Privacidad</span>
+                </a>
+                <a
+                  href="https://idgleb.github.io/terms.html"
+                  className="navbar-legal-dropdown-item"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeLegalDropdown}
+                >
+                  <span className="navbar-dropdown-icon">📋</span>
+                  <span className="navbar-dropdown-text">Términos</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
         
