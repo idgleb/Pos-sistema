@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="POS Sistema - Sistema de Punto de Venta gratuito. Gestiona productos, ventas, gastos y movimientos de tu negocio. Funciona completamente en tu navegador con backup en Google Drive.">
+    <meta name="theme-color" content="#082a9a">
+    <!-- Google Search Console Verification -->
+    <meta name="google-site-verification" content="ZhQGr8KEqq3RE3KYGlKtroUGFQXbFxYDDXyowKv_JMA" />
+    <title>POS Sistema - Sistema de Punto de Venta Gratuito</title>
+    <style>
+        /* Reset y variables */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.3);
+            --text-primary: rgba(255, 255, 255, 0.9);
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --accent-color: #6dd5ed;
+            --primary-color: #082a9a;
+            --primary-hover: #1d4ed8;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            color: var(--text-primary);
+        }
+
+        /* Fondo animado */
+        #bg3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        #glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, #6dd5ed88 0%, #2193b088 40%, #fff0 80%);
+            filter: blur(80px) brightness(1.3);
+            opacity: 0.7;
+            animation: glowcycle 6s linear infinite alternate;
+        }
+
+        @keyframes glowcycle {
+            0% { opacity: 0.7; filter: blur(80px) brightness(1.3); }
+            50% { opacity: 0; filter: blur(0px) brightness(1.0); }
+            100% { opacity: 0.7; filter: blur(80px) brightness(1.3); }
+        }
+
+        /* Contenedor principal */
+        .landing-container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* Header */
+        .landing-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .landing-logo {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .landing-title {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #6dd5ed 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .landing-subtitle {
+            font-size: 1.3em;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Botón CTA */
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 8px 24px rgba(8, 42, 154, 0.4);
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(8, 42, 154, 0.6);
+        }
+
+        /* Secciones de características */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-color);
+            box-shadow: 0 12px 40px rgba(109, 213, 237, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        /* Sección de Google Drive */
+        .google-drive-section {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 60px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+        }
+
+        .google-drive-section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .google-drive-section p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 16px;
+            font-size: 1.1em;
+        }
+
+        .google-drive-section ul {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-left: 24px;
+            margin-bottom: 20px;
+        }
+
+        .google-drive-section li {
+            margin-bottom: 8px;
+        }
+
+        .google-drive-section strong {
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        .landing-footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-links a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        .footer-separator {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        .footer-copyright {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .landing-title {
+                font-size: 2em;
+            }
+
+            .landing-subtitle {
+                font-size: 1.1em;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .google-drive-section {
+                padding: 24px;
+            }
+
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg3d"></canvas>
+    <div id="glow"></div>
+
+    <div class="landing-container">
+        <!-- Header -->
+        <div class="landing-header">
+            <div class="landing-logo">🛒</div>
+            <h1 class="landing-title">POS Sistema</h1>
+            <p class="landing-subtitle">
+                Sistema de Punto de Venta gratuito que funciona completamente en tu navegador.<br>
+                Gestiona productos, ventas, gastos y movimientos de tu negocio de forma sencilla y eficiente.
+            </p>
+            <a href="/Pos-sistema/" class="cta-button">🚀 Comenzar Ahora</a>
+        </div>
+
+        <!-- Características -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📦</div>
+                <h3 class="feature-title">Gestión de Productos</h3>
+                <p class="feature-description">
+                    Administra tu inventario con facilidad. Agrega, edita y organiza productos con precios fijos o precios libres.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3 class="feature-title">Punto de Venta</h3>
+                <p class="feature-description">
+                    Procesa ventas rápidamente con una interfaz intuitiva. Carrito de compras, teclado numérico y múltiples métodos de pago.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Dashboard y Reportes</h3>
+                <p class="feature-description">
+                    Visualiza métricas importantes: ingresos, gastos, productos más vendidos, velocidad de ventas y más con gráficos interactivos.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💸</div>
+                <h3 class="feature-title">Control de Gastos</h3>
+                <p class="feature-description">
+                    Registra y categoriza todos tus gastos. Mantén un control completo de los movimientos financieros de tu negocio.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <h3 class="feature-title">Backup en Google Drive</h3>
+                <p class="feature-description">
+                    Protege tus datos con backups automáticos en Google Drive. Restaura tus datos cuando lo necesites.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">100% Responsive</h3>
+                <p class="feature-description">
+                    Funciona perfectamente en cualquier dispositivo: computadora, tablet o móvil. Diseño adaptativo para todas las pantallas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Sección Google Drive -->
+        <div class="google-drive-section">
+            <h2>🔐 Uso de Google Drive y Protección de Datos</h2>
+            
+            <p>
+                <strong>¿Por qué solicitamos acceso a Google Drive?</strong>
+            </p>
+            <p>
+                POS Sistema solicita acceso a Google Drive únicamente para permitirte crear backups de tus datos de negocio 
+                en tu propia cuenta de Google Drive. Esta funcionalidad es completamente opcional y te permite:
+            </p>
+            <ul>
+                <li>Proteger tus datos contra pérdidas accidentales</li>
+                <li>Restaurar tus datos desde cualquier dispositivo</li>
+                <li>Mantener un historial de backups de tu negocio</li>
+                <li>Tener control total sobre tus datos</li>
+            </ul>
+
+            <p>
+                <strong>¿Qué datos accedemos?</strong>
+            </p>
+            <p>
+                La aplicación solo solicita permisos para crear y gestionar archivos en la carpeta "POS Backups" de tu Google Drive. 
+                No accedemos a otros archivos, no leemos tu correo, ni accedemos a ninguna otra información de tu cuenta de Google.
+            </p>
+
+            <p>
+                <strong>Seguridad y Privacidad:</strong>
+            </p>
+            <ul>
+                <li>Utilizamos OAuth 2.0 de Google para autenticación segura</li>
+                <li>Los datos se almacenan solo en tu Google Drive, en una carpeta privada</li>
+                <li>No compartimos, vendemos ni transferimos tus datos a terceros</li>
+                <li>Puedes desconectar la aplicación en cualquier momento</li>
+                <li>Puedes revocar los permisos cuando quieras</li>
+            </ul>
+
+            <p style="text-align: center; margin-top: 30px;">
+                <a href="https://idgleb.github.io/privacy.html" target="_blank" style="color: var(--accent-color); text-decoration: underline; font-weight: bold; margin-right: 20px;">
+                    📄 Ver Política de Privacidad Completa
+                </a>
+                <a href="https://idgleb.github.io/terms.html" target="_blank" style="color: var(--accent-color); text-decoration: underline; font-weight: bold;">
+                    📋 Ver Términos de Servicio
+                </a>
+            </p>
+        </div>
+
+        <!-- CTA Final -->
+        <div style="text-align: center; margin-top: 60px;">
+            <h2 style="font-size: 2.2em; margin-bottom: 20px; color: var(--text-primary);">
+                ¿Listo para comenzar?
+            </h2>
+            <p style="font-size: 1.2em; color: var(--text-secondary); margin-bottom: 30px;">
+                Comienza a gestionar tu negocio de forma profesional y gratuita
+            </p>
+            <a href="/Pos-sistema/" class="cta-button">🚀 Abrir POS Sistema</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="landing-footer">
+        <div class="footer-links">
+            <a href="/Pos-sistema/">Inicio</a>
+            <span class="footer-separator">•</span>
+            <a href="https://idgleb.github.io/privacy.html" target="_blank">Política de Privacidad</a>
+            <span class="footer-separator">•</span>
+            <a href="https://idgleb.github.io/terms.html" target="_blank">Términos de Servicio</a>
+            <span class="footer-separator">•</span>
+            <a href="https://github.com/idgleb/Pos-sistema" target="_blank">GitHub</a>
+        </div>
+        <div class="footer-copyright">
+            © 2025 POS Sistema. Sistema de Punto de Venta gratuito y de código abierto.
+        </div>
+    </div>
+
+    <script>
+        // Animación simple del canvas de fondo (sin Three.js)
+        (function() {
+            const canvas = document.getElementById('bg3d');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            let animationId;
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Partículas simples
+            const particles = [];
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2 + 1,
+                    speedX: (Math.random() - 0.5) * 0.5,
+                    speedY: (Math.random() - 0.5) * 0.5,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.x += particle.speedX;
+                    particle.y += particle.speedY;
+
+                    // Rebote en los bordes
+                    if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+                    if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+
+                    // Mantener dentro del canvas
+                    particle.x = Math.max(0, Math.min(canvas.width, particle.x));
+                    particle.y = Math.max(0, Math.min(canvas.height, particle.y));
+
+                    // Dibujar partícula
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(109, 213, 237, ${particle.opacity})`;
+                    ctx.fill();
+                });
+
+                animationId = requestAnimationFrame(animate);
+            }
+
+            animate();
+        })();
+    </script>
+</body>
+</html>
+
