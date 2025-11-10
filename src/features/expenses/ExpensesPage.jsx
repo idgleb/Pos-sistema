@@ -252,28 +252,17 @@ const ExpensesPage = () => {
   const handleOpenModal = (movement = null) => {
     setEditingMovement(movement);
     
-    // Extraer la fecha y hora del ISO string sin conversión de zona horaria
+    // Extraer la fecha y hora del ISO string convirtiendo a zona horaria local
     let dateValue = format(new Date(), 'yyyy-MM-dd');
     let timeValue = format(new Date(), 'HH:mm');
     
     if (movement && movement.dateISO) {
-      // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
-      const dateMatch = movement.dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
-      if (dateMatch) {
-        dateValue = dateMatch[1];
-      } else {
-        // Fallback: usar parseISO si no hay match
-        dateValue = format(parseISO(movement.dateISO), 'yyyy-MM-dd');
-      }
+      // Parsear el ISO string para convertir a zona horaria local
+      const localDate = parseISO(movement.dateISO);
       
-      // Extraer la hora del ISO string (HH:mm)
-      const timeMatch = movement.dateISO.match(/T(\d{2}:\d{2})/);
-      if (timeMatch) {
-        timeValue = timeMatch[1];
-      } else {
-        // Fallback: usar parseISO si no hay match
-        timeValue = format(parseISO(movement.dateISO), 'HH:mm');
-      }
+      // Extraer fecha y hora en zona horaria local
+      dateValue = format(localDate, 'yyyy-MM-dd');
+      timeValue = format(localDate, 'HH:mm');
     }
     
     setFormData({
@@ -309,11 +298,16 @@ const ExpensesPage = () => {
       const meta = formData.note ? { note: formData.note } : {};
 
       if (editingMovement) {
-        // Construir ISO string directamente desde la fecha y hora seleccionadas
+        // Crear fecha local con la fecha y hora seleccionadas
         // formData.date está en formato 'yyyy-MM-dd' y formData.time en formato 'HH:mm'
-        // Lo convertimos a ISO como UTC con la hora seleccionada
-        // Esto evita problemas de zona horaria que causan que se guarde un día antes
-        const dateISO = `${formData.date}T${formData.time}:00.000Z`;
+        const [year, month, day] = formData.date.split('-').map(Number);
+        const [hours, minutes] = formData.time.split(':').map(Number);
+        
+        // Crear Date en zona horaria local
+        const localDate = new Date(year, month - 1, day, hours, minutes);
+        
+        // Convertir a ISO string (esto automáticamente convierte a UTC)
+        const dateISO = localDate.toISOString();
         
         const updatedMovement = {
           ...editingMovement,
