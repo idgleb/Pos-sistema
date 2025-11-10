@@ -298,9 +298,17 @@ export const signInGoogle = async () => {
     let userProfile = null;
     
     return new Promise((resolve, reject) => {
+      // Construir scopes explícitamente para asegurar que Drive esté incluido
+      const requestedScopes = [
+        'https://www.googleapis.com/auth/drive.file',
+        'openid',
+        'profile',
+        'email'
+      ].join(' ');
+      
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
-        scope: SCOPES + ' openid profile email',
+        scope: requestedScopes,
         callback: async (response) => {
           console.log('Callback de Google OAuth recibido:', response);
           
@@ -310,6 +318,19 @@ export const signInGoogle = async () => {
           }
           
           accessToken = response.access_token;
+          
+          // Verificar que el token incluya el scope de Drive
+          const grantedScopes = response.scope || '';
+          const hasDriveScope = grantedScopes.includes('drive.file') || grantedScopes.includes('https://www.googleapis.com/auth/drive.file');
+          
+          if (!hasDriveScope) {
+            const errorMsg = `El token no incluye el scope de Google Drive necesario.\n\nScopes recibidos: ${grantedScopes}\n\nPor favor, intenta conectar nuevamente y asegúrate de aceptar todos los permisos solicitados.`;
+            console.error('❌', errorMsg);
+            reject(new Error(errorMsg));
+            return;
+          }
+          
+          console.log('✅ Token incluye scope de Google Drive:', grantedScopes);
           
           // Guardar token y perfil
           currentAccessToken = accessToken;
@@ -371,8 +392,8 @@ export const signInGoogle = async () => {
         }
       });
       
-      // Solicitar token con popup
-      tokenClient.requestAccessToken({ prompt: 'consent' });
+      // Solicitar token con popup, forzando consentimiento para todos los scopes
+      tokenClient.requestAccessToken({ prompt: 'select_account consent' });
     });
   } catch (error) {
     console.error('Error en login:', error);
@@ -549,6 +570,21 @@ const getOrCreateBackupFolder = async () => {
     
   } catch (error) {
     console.error('Error obteniendo/creando carpeta:', error);
+    
+    // Verificar si el error es por falta de scope
+    const errorMessage = error.body || error.message || JSON.stringify(error);
+    const isInsufficientScope = error.status === 403 && (
+      errorMessage.includes('insufficient authentication scopes') ||
+      errorMessage.includes('insufficient_scope') ||
+      errorMessage.includes('Request had insufficient authentication scopes')
+    );
+    
+    if (isInsufficientScope) {
+      console.error('❌ Error: El token no tiene el scope de Google Drive necesario.');
+      console.error('❌ Por favor, desconecta y vuelve a conectar para solicitar los permisos correctos.');
+      throw new Error('El token no tiene permisos de Google Drive. Por favor, desconecta y vuelve a conectar.');
+    }
+    
     throw error;
   }
 };
