@@ -308,7 +308,7 @@ export const signInGoogle = async () => {
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: requestedScopes,
-        include_granted_scopes: true,
+        // NO usar include_granted_scopes para forzar solicitud de todos los scopes
         callback: async (response) => {
           console.log('Callback de Google OAuth recibido:', response);
           
@@ -402,8 +402,9 @@ export const signInGoogle = async () => {
         }
       });
       
-      // Solicitar token con popup, forzando consentimiento para todos los scopes
-      tokenClient.requestAccessToken({ prompt: 'select_account consent' });
+      // Solicitar token con popup, forzando consentimiento completo (sin select_account)
+      // Esto fuerza a Google a mostrar la pantalla de consentimiento completa
+      tokenClient.requestAccessToken({ prompt: 'consent' });
     });
   } catch (error) {
     console.error('Error en login:', error);
