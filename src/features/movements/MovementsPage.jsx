@@ -522,12 +522,10 @@ const MovementsPage = () => {
                     </div>
                     <div className="date-time">
                       {(() => {
-                        // Extraer hora del ISO string
-                        const timeMatch = movement.dateISO.match(/T(\d{2}:\d{2})/);
-                        if (timeMatch) {
-                          return timeMatch[1];
-                        }
-                        return format(parseISO(movement.dateISO), 'HH:mm', { locale: es });
+                        // Parsear el ISO string para convertir a zona horaria local
+                        const localDate = parseISO(movement.dateISO);
+                        // Formatear la hora en zona horaria local
+                        return format(localDate, 'HH:mm', { locale: es });
                       })()}
                     </div>
                   </div>
