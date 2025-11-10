@@ -250,10 +250,25 @@ const ExpensesPage = () => {
 
   const handleOpenModal = (movement = null) => {
     setEditingMovement(movement);
+    
+    // Extraer la fecha del ISO string sin conversión de zona horaria
+    let dateValue = format(new Date(), 'yyyy-MM-dd');
+    if (movement && movement.dateISO) {
+      // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
+      // Esto evita problemas de zona horaria al cargar la fecha en el input
+      const dateMatch = movement.dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch) {
+        dateValue = dateMatch[1];
+      } else {
+        // Fallback: usar parseISO si no hay match
+        dateValue = format(parseISO(movement.dateISO), 'yyyy-MM-dd');
+      }
+    }
+    
     setFormData({
       amount: movement ? (movement.amount / 100).toFixed(2) : '',
       note: movement ? (movement.meta?.note || '') : '',
-      date: movement ? format(parseISO(movement.dateISO), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')
+      date: dateValue
     });
     setShowModal(true);
   };
@@ -321,6 +336,14 @@ const ExpensesPage = () => {
   };
 
   const formatDisplayDate = (dateISO) => {
+    // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
+    // Esto evita problemas de zona horaria al mostrar la fecha
+    const dateMatch = dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (dateMatch) {
+      const [year, month, day] = dateMatch[1].split('-').map(Number);
+      return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: es });
+    }
+    // Fallback: usar parseISO si no hay match
     return format(parseISO(dateISO), 'dd/MM/yyyy', { locale: es });
   };
 
