@@ -16,6 +16,58 @@ let gapiInitPromise = null;
 let currentAccessToken = null;
 let currentUserProfile = null;
 
+// Claves para localStorage
+const STORAGE_KEY_TOKEN = 'pos_gdrive_token';
+const STORAGE_KEY_PROFILE = 'pos_gdrive_profile';
+
+/**
+ * Guardar token y perfil en localStorage
+ */
+const saveAuthState = (token, profile) => {
+  try {
+    if (token) {
+      localStorage.setItem(STORAGE_KEY_TOKEN, token);
+    }
+    if (profile) {
+      localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
+    }
+  } catch (error) {
+    console.warn('Error guardando estado de autenticación:', error);
+  }
+};
+
+/**
+ * Cargar token y perfil desde localStorage
+ */
+const loadAuthState = () => {
+  try {
+    const token = localStorage.getItem(STORAGE_KEY_TOKEN);
+    const profileStr = localStorage.getItem(STORAGE_KEY_PROFILE);
+    
+    if (token && profileStr) {
+      currentAccessToken = token;
+      currentUserProfile = JSON.parse(profileStr);
+      isSignedIn = true;
+      return { token, profile: currentUserProfile };
+    }
+  } catch (error) {
+    console.warn('Error cargando estado de autenticación:', error);
+  }
+  return null;
+};
+
+/**
+ * Limpiar estado de autenticación de localStorage
+ */
+const clearAuthState = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_PROFILE);
+  } catch (error) {
+    console.warn('Error limpiando estado de autenticación:', error);
+  }
+};
+
 /**
  * Cargar y inicializar la API de Google
  */
@@ -38,7 +90,7 @@ export const initGoogleDrive = () => {
     const existingScript = document.querySelector('script[src="https://apis.google.com/js/api.js"]');
     
     const initGapi = async () => {
-      return new Promise((resolveInit, rejectInit) => {
+      return new Promise(async (resolveInit, rejectInit) => {
         window.gapi.load('client:auth2', async () => {
           try {
             await window.gapi.client.init({
@@ -50,6 +102,39 @@ export const initGoogleDrive = () => {
             });
             
             isGapiInitialized = true;
+            
+            // Intentar restaurar estado guardado
+            const savedState = loadAuthState();
+            if (savedState && savedState.token) {
+              try {
+                // Configurar el token en gapi.client
+                window.gapi.client.setToken({ access_token: savedState.token });
+                
+                // Verificar que el token sigue siendo válido haciendo una petición simple
+                try {
+                  await window.gapi.client.request({
+                    path: 'https://www.googleapis.com/oauth2/v2/userinfo',
+                    method: 'GET'
+                  });
+                  
+                  // Token válido, restaurar estado
+                  console.log('✅ Sesión de Google Drive restaurada');
+                } catch (tokenError) {
+                  // Token inválido o expirado, limpiar estado
+                  console.warn('Token expirado o inválido, limpiando estado');
+                  clearAuthState();
+                  currentAccessToken = null;
+                  currentUserProfile = null;
+                  isSignedIn = false;
+                }
+              } catch (restoreError) {
+                console.warn('Error restaurando sesión:', restoreError);
+                clearAuthState();
+                currentAccessToken = null;
+                currentUserProfile = null;
+                isSignedIn = false;
+              }
+            }
             
             try {
               // Intentar obtener la instancia de auth (puede fallar en algunos entornos)
@@ -64,7 +149,7 @@ export const initGoogleDrive = () => {
               // Si falla la inicialización de auth2 (por ejemplo, iframe bloqueado),
               // no es crítico, solo significa que no podemos verificar el estado inicial
               console.warn('No se pudo inicializar auth2 (esto es normal en algunos entornos):', authError);
-              isSignedIn = false;
+              // No cambiar isSignedIn aquí si ya lo restauramos desde localStorage
             }
             
             resolveInit(true);
@@ -77,7 +162,22 @@ export const initGoogleDrive = () => {
               console.warn('⚠️ Google API iframe falló (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
               // Marcar como inicializado de todas formas para permitir que el popup funcione
               isGapiInitialized = true;
-              isSignedIn = false;
+              
+              // Intentar restaurar estado guardado incluso si auth2 falla
+              const savedState = loadAuthState();
+              if (savedState && savedState.token) {
+                // Intentar usar el token directamente con gapi.client
+                try {
+                  if (window.gapi && window.gapi.client) {
+                    window.gapi.client.setToken({ access_token: savedState.token });
+                    console.log('✅ Sesión de Google Drive restaurada (sin auth2)');
+                  }
+                } catch (restoreError) {
+                  console.warn('Error restaurando sesión:', restoreError);
+                  clearAuthState();
+                }
+              }
+              
               resolveInit(true);
             } else {
               console.error('Error inicializando Google API:', error);
@@ -221,6 +321,9 @@ export const signInGoogle = async () => {
             currentUserProfile = userProfile;
             isSignedIn = true;
             
+            // Guardar en localStorage
+            saveAuthState(accessToken, userProfile);
+            
             resolve({
               success: true,
               user: userProfile
@@ -235,6 +338,10 @@ export const signInGoogle = async () => {
               imageUrl: null
             };
             isSignedIn = true;
+            
+            // Guardar en localStorage
+            saveAuthState(accessToken, currentUserProfile);
+            
             resolve({
               success: true,
               user: currentUserProfile
@@ -342,6 +449,9 @@ export const signOutGoogle = async () => {
     currentUserProfile = null;
     isSignedIn = false;
     
+    // Limpiar de localStorage
+    clearAuthState();
+    
     // Limpiar token de gapi.client
     if (window.gapi && window.gapi.client) {
       window.gapi.client.setToken(null);
@@ -354,6 +464,7 @@ export const signOutGoogle = async () => {
     currentAccessToken = null;
     currentUserProfile = null;
     isSignedIn = false;
+    clearAuthState();
     return {
       success: true, // Consideramos exitoso aunque haya error al revocar
       error: error.message
