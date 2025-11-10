@@ -13,6 +13,8 @@ const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 let isGapiInitialized = false;
 let isSignedIn = false;
 let gapiInitPromise = null;
+let currentAccessToken = null;
+let currentUserProfile = null;
 
 /**
  * Cargar y inicializar la API de Google
@@ -127,92 +129,127 @@ export const isGoogleDriveReady = () => {
 };
 
 /**
- * Iniciar sesión con Google
+ * Cargar Google Identity Services (nueva API)
+ */
+const loadGoogleIdentityServices = () => {
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+      resolve();
+      return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+        resolve();
+      } else {
+        reject(new Error('Google Identity Services no se cargó correctamente'));
+      }
+    };
+    script.onerror = () => reject(new Error('No se pudo cargar Google Identity Services'));
+    document.head.appendChild(script);
+  });
+};
+
+/**
+ * Iniciar sesión con Google usando Google Identity Services
  */
 export const signInGoogle = async () => {
   try {
+    // Cargar Google Identity Services
+    await loadGoogleIdentityServices();
+    
+    // Inicializar gapi.client para operaciones de Drive
     if (!isGapiInitialized) {
       await initGoogleDrive();
     }
     
-    // Verificar que gapi esté disponible
-    if (!window.gapi) {
-      throw new Error('Google API no está disponible. Recarga la página e intenta de nuevo.');
-    }
-    
-    // Intentar obtener la instancia de auth2
-    let authInstance;
-    try {
-      authInstance = window.gapi.auth2.getAuthInstance();
-    } catch (authError) {
-      console.warn('Auth2 no disponible inicialmente, intentando inicializar...', authError);
-      authInstance = null;
-    }
-    
-    // Si no hay instancia, intentar inicializar
-    if (!authInstance) {
-      try {
-        // Esperar a que gapi.client esté listo
-        if (!window.gapi.client) {
-          await new Promise((resolve) => {
-            if (window.gapi.client) {
-              resolve();
-            } else {
-              window.gapi.load('client', resolve);
-            }
-          });
+    // Verificar que gapi.client esté disponible para Drive API
+    if (!window.gapi || !window.gapi.client) {
+      await new Promise((resolve) => {
+        if (window.gapi && window.gapi.client) {
+          resolve();
+        } else {
+          window.gapi.load('client', resolve);
         }
-        
-        // Inicializar auth2 con popup mode
-        await window.gapi.auth2.init({
-          client_id: CLIENT_ID,
-          scope: SCOPES,
-          fetch_basic_profile: true
-        });
-        
-        authInstance = window.gapi.auth2.getAuthInstance();
-      } catch (initError) {
-        console.warn('Error inicializando auth2, intentando método directo...', initError);
-        // Último intento: crear instancia directamente
-        try {
-          if (window.gapi.auth2 && !window.gapi.auth2.getAuthInstance()) {
-            await window.gapi.auth2.init({
-              client_id: CLIENT_ID,
-              scope: SCOPES
+      });
+    }
+    
+    // Inicializar cliente de token OAuth
+    let tokenClient = null;
+    let accessToken = null;
+    let userProfile = null;
+    
+    return new Promise((resolve, reject) => {
+      tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES + ' openid profile email',
+        callback: async (response) => {
+          console.log('Callback de Google OAuth recibido:', response);
+          
+          if (response.error) {
+            reject(new Error(response.error));
+            return;
+          }
+          
+          accessToken = response.access_token;
+          
+          // Guardar token y perfil
+          currentAccessToken = accessToken;
+          
+          // Usar el token para inicializar gapi.client
+          window.gapi.client.setToken({ access_token: accessToken });
+          
+          // Obtener información del perfil usando el token
+          try {
+            const profileResponse = await window.gapi.client.request({
+              path: 'https://www.googleapis.com/oauth2/v2/userinfo',
+              method: 'GET'
+            });
+            
+            userProfile = {
+              id: profileResponse.result.id,
+              name: profileResponse.result.name,
+              email: profileResponse.result.email,
+              imageUrl: profileResponse.result.picture
+            };
+            
+            // Guardar perfil
+            currentUserProfile = userProfile;
+            isSignedIn = true;
+            
+            resolve({
+              success: true,
+              user: userProfile
+            });
+          } catch (profileError) {
+            console.warn('No se pudo obtener el perfil completo, usando información básica');
+            // Si falla obtener el perfil, al menos tenemos el token
+            currentUserProfile = {
+              id: 'unknown',
+              name: 'Usuario de Google',
+              email: 'usuario@google.com',
+              imageUrl: null
+            };
+            isSignedIn = true;
+            resolve({
+              success: true,
+              user: currentUserProfile
             });
           }
-          authInstance = window.gapi.auth2.getAuthInstance();
-        } catch (finalError) {
-          console.error('No se pudo inicializar auth2 después de múltiples intentos:', finalError);
-          // Continuar de todas formas, el popup puede funcionar con window.open
+        },
+        error_callback: (error) => {
+          console.error('Error callback de Google OAuth:', error);
+          reject(error);
         }
-      }
-    }
-    
-    if (!authInstance) {
-      return {
-        success: false,
-        error: 'No se pudo inicializar Google Auth. Por favor, verifica que https://idgleb.github.io esté registrado en Google Cloud Console y espera 15-30 minutos después de guardar los cambios. Luego recarga la página.'
-      };
-    }
-    
-    // Usar signIn (esto abrirá un popup automáticamente)
-    const googleUser = await authInstance.signIn({
-      prompt: 'select_account'
+      });
+      
+      // Solicitar token con popup
+      tokenClient.requestAccessToken({ prompt: 'consent' });
     });
-    
-    const profile = googleUser.getBasicProfile();
-    isSignedIn = true;
-    
-    return {
-      success: true,
-      user: {
-        id: profile.getId(),
-        name: profile.getName(),
-        email: profile.getEmail(),
-        imageUrl: profile.getImageUrl()
-      }
-    };
   } catch (error) {
     console.error('Error en login:', error);
     console.error('Error details:', {
@@ -291,16 +328,34 @@ export const signInGoogle = async () => {
  */
 export const signOutGoogle = async () => {
   try {
-    if (!isGapiInitialized) return { success: true };
+    // Revocar token usando Google Identity Services
+    if (currentAccessToken && window.google && window.google.accounts) {
+      try {
+        window.google.accounts.oauth2.revoke(currentAccessToken);
+      } catch (revokeError) {
+        console.warn('Error revocando token:', revokeError);
+      }
+    }
     
-    const authInstance = window.gapi.auth2.getAuthInstance();
-    await authInstance.signOut();
+    // Limpiar estado
+    currentAccessToken = null;
+    currentUserProfile = null;
+    isSignedIn = false;
+    
+    // Limpiar token de gapi.client
+    if (window.gapi && window.gapi.client) {
+      window.gapi.client.setToken(null);
+    }
     
     return { success: true };
   } catch (error) {
     console.error('Error en logout:', error);
+    // Limpiar estado de todas formas
+    currentAccessToken = null;
+    currentUserProfile = null;
+    isSignedIn = false;
     return {
-      success: false,
+      success: true, // Consideramos exitoso aunque haya error al revocar
       error: error.message
     };
   }
@@ -310,22 +365,8 @@ export const signOutGoogle = async () => {
  * Obtener información del usuario
  */
 export const getUserInfo = () => {
-  if (!isSignedIn || !isGapiInitialized) return null;
-  
-  try {
-    const authInstance = window.gapi.auth2.getAuthInstance();
-    const user = authInstance.currentUser.get();
-    const profile = user.getBasicProfile();
-    
-    return {
-      id: profile.getId(),
-      name: profile.getName(),
-      email: profile.getEmail(),
-      imageUrl: profile.getImageUrl()
-    };
-  } catch (error) {
-    return null;
-  }
+  if (!isSignedIn || !currentUserProfile) return null;
+  return currentUserProfile;
 };
 
 /**
@@ -413,7 +454,11 @@ export const uploadBackupToGoogleDrive = async (data) => {
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', file);
     
-    const token = window.gapi.auth.getToken().access_token;
+    const token = currentAccessToken || (window.gapi.client.getToken()?.access_token);
+    
+    if (!token) {
+      throw new Error('No hay token de acceso disponible');
+    }
     
     const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
