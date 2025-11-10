@@ -281,10 +281,15 @@ const ExpensesPage = () => {
       const meta = formData.note ? { note: formData.note } : {};
 
       if (editingMovement) {
+        // Construir ISO string directamente desde la fecha seleccionada
+        // formData.date ya está en formato 'yyyy-MM-dd', lo convertimos a ISO como UTC medianoche
+        // Esto evita problemas de zona horaria que causan que se guarde un día antes
+        const dateISO = `${formData.date}T00:00:00.000Z`;
+        
         const updatedMovement = {
           ...editingMovement,
           amount: amountInCents,
-          dateISO: new Date(formData.date).toISOString(),
+          dateISO: dateISO,
           meta
         };
         actions.updateMovement(updatedMovement);
