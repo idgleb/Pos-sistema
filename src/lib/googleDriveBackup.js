@@ -109,6 +109,11 @@ export const initGoogleDrive = () => {
               try {
                 // Configurar el token en gapi.client
                 window.gapi.client.setToken({ access_token: savedState.token });
+                currentAccessToken = savedState.token;
+                currentUserProfile = savedState.profile;
+                
+                // Esperar un momento para que gapi.client procese el token
+                await new Promise(resolve => setTimeout(resolve, 100));
                 
                 // Verificar que el token sigue siendo válido haciendo una petición simple
                 try {
@@ -119,6 +124,7 @@ export const initGoogleDrive = () => {
                   
                   // Token válido, restaurar estado
                   console.log('✅ Sesión de Google Drive restaurada');
+                  isSignedIn = true;
                 } catch (tokenError) {
                   // Token inválido o expirado, limpiar estado
                   console.warn('Token expirado o inválido, limpiando estado');
@@ -170,11 +176,19 @@ export const initGoogleDrive = () => {
                 try {
                   if (window.gapi && window.gapi.client) {
                     window.gapi.client.setToken({ access_token: savedState.token });
+                    currentAccessToken = savedState.token;
+                    currentUserProfile = savedState.profile;
+                    // Esperar un momento para que gapi.client procese el token
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     console.log('✅ Sesión de Google Drive restaurada (sin auth2)');
+                    isSignedIn = true;
                   }
                 } catch (restoreError) {
                   console.warn('Error restaurando sesión:', restoreError);
                   clearAuthState();
+                  currentAccessToken = null;
+                  currentUserProfile = null;
+                  isSignedIn = false;
                 }
               }
               
@@ -302,6 +316,9 @@ export const signInGoogle = async () => {
           
           // Usar el token para inicializar gapi.client
           window.gapi.client.setToken({ access_token: accessToken });
+          
+          // Esperar un momento para que gapi.client procese el token completamente
+          await new Promise(resolve => setTimeout(resolve, 200));
           
           // Obtener información del perfil usando el token
           try {
@@ -492,6 +509,19 @@ export const isConnectedToGoogleDrive = () => {
  */
 const getOrCreateBackupFolder = async () => {
   try {
+    // Asegurarse de que el token esté configurado en gapi.client
+    const token = currentAccessToken || (window.gapi.client.getToken()?.access_token);
+    if (token && !window.gapi.client.getToken()) {
+      window.gapi.client.setToken({ access_token: token });
+      // Esperar un momento para que gapi.client procese el token
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // Verificar que tenemos un token válido
+    if (!token) {
+      throw new Error('No hay token de acceso disponible');
+    }
+    
     // Buscar carpeta existente
     const response = await window.gapi.client.drive.files.list({
       q: "name='POS Backups' and mimeType='application/vnd.google-apps.folder' and trashed=false",
