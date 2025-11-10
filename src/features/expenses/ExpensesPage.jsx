@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '@/app/store/StoreProvider';
 import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 // Importar estilos modulares
 import './styles/ExpensesPage.base.css';    // Estilos base comunes
@@ -38,6 +39,12 @@ const ExpensesPage = () => {
 
   // Estado para el modal de filtros en tablet
   const [showFiltersModal, setShowFiltersModal] = useState(false);
+  
+  // Estado para el modal de confirmación de eliminación
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({
+    isOpen: false,
+    movementId: null
+  });
 
   // Filtrar solo movimientos de tipo 'expense'
   const expenses = useMemo(() => {
@@ -330,9 +337,21 @@ const ExpensesPage = () => {
   };
 
   const handleDelete = (movementId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este gasto?')) {
-      actions.deleteMovement(movementId);
+    setDeleteConfirmModal({
+      isOpen: true,
+      movementId: movementId
+    });
+  };
+  
+  const handleConfirmDelete = () => {
+    if (deleteConfirmModal.movementId) {
+      actions.deleteMovement(deleteConfirmModal.movementId);
     }
+    setDeleteConfirmModal({ isOpen: false, movementId: null });
+  };
+  
+  const handleCancelDelete = () => {
+    setDeleteConfirmModal({ isOpen: false, movementId: null });
   };
 
   const formatAmount = (amountInCents) => {
@@ -831,6 +850,18 @@ const ExpensesPage = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmModal
+        isOpen={deleteConfirmModal.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="idgleb.github.io dice"
+        message="¿Estás seguro de que quieres eliminar este gasto?"
+        confirmText="Aceptar"
+        cancelText="Cancelar"
+        variant="danger"
+      />
 
     </>
   );

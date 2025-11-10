@@ -5,7 +5,7 @@ const ConfirmModal = ({
   isOpen, 
   onClose, 
   onConfirm, 
-  title = '¿Estás seguro?',
+  title = 'idgleb.github.io dice',
   message = '¿Deseas continuar con esta acción?',
   confirmText = 'Aceptar',
   cancelText = 'Cancelar',
@@ -36,16 +36,16 @@ const ConfirmModal = ({
         
         <div className="confirm-modal-footer">
           <button 
-            className="confirm-btn confirm-btn-cancel"
-            onClick={handleCancel}
-          >
-            {cancelText}
-          </button>
-          <button 
             className="confirm-btn confirm-btn-confirm"
             onClick={handleConfirm}
           >
             {confirmText}
+          </button>
+          <button 
+            className="confirm-btn confirm-btn-cancel"
+            onClick={handleCancel}
+          >
+            {cancelText}
           </button>
         </div>
       </div>

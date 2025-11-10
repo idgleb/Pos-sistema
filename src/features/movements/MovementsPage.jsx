@@ -3,6 +3,7 @@ import { useStore } from '../../app/store/StoreProvider';
 import { formatCurrency } from '../../lib/dateHelpers';
 import { format, parseISO, startOfDay, endOfDay, isWithinInterval, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import './MovementsPage.css';
 
 const MovementsPage = () => {
@@ -31,6 +32,12 @@ const MovementsPage = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  
+  // Estado para el modal de confirmación de eliminación
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({
+    isOpen: false,
+    movementId: null
+  });
 
   // Funciones auxiliares
   const getTypeLabel = (type) => {
@@ -291,9 +298,21 @@ const MovementsPage = () => {
   };
 
   const handleDelete = (movementId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este movimiento?')) {
-      actions.deleteMovement(movementId);
+    setDeleteConfirmModal({
+      isOpen: true,
+      movementId: movementId
+    });
+  };
+  
+  const handleConfirmDelete = () => {
+    if (deleteConfirmModal.movementId) {
+      actions.deleteMovement(deleteConfirmModal.movementId);
     }
+    setDeleteConfirmModal({ isOpen: false, movementId: null });
+  };
+  
+  const handleCancelDelete = () => {
+    setDeleteConfirmModal({ isOpen: false, movementId: null });
   };
 
   const clearFilters = () => {
@@ -693,6 +712,19 @@ const MovementsPage = () => {
         </div>
       </div>
     )}
+    
+    {/* Modal de confirmación de eliminación */}
+    <ConfirmModal
+      isOpen={deleteConfirmModal.isOpen}
+      onClose={handleCancelDelete}
+      onConfirm={handleConfirmDelete}
+      title="idgleb.github.io dice"
+      message="¿Estás seguro de que quieres eliminar este movimiento?"
+      confirmText="Aceptar"
+      cancelText="Cancelar"
+      variant="danger"
+    />
+    
     </>
   );
 };
