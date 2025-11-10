@@ -299,16 +299,16 @@ export const signInGoogle = async () => {
     
     return new Promise((resolve, reject) => {
       // Construir scopes explícitamente para asegurar que Drive esté incluido
-      const requestedScopes = [
-        'https://www.googleapis.com/auth/drive.file',
-        'openid',
-        'profile',
-        'email'
-      ].join(' ');
+      // IMPORTANTE: El scope de Drive debe estar primero y ser explícito
+      const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid profile email';
+      
+      console.log('🔵 Solicitando scopes:', requestedScopes);
+      console.log('🔵 Client ID:', CLIENT_ID);
       
       tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: requestedScopes,
+        include_granted_scopes: true,
         callback: async (response) => {
           console.log('Callback de Google OAuth recibido:', response);
           
@@ -321,10 +321,14 @@ export const signInGoogle = async () => {
           
           // Verificar que el token incluya el scope de Drive
           const grantedScopes = response.scope || '';
-          const hasDriveScope = grantedScopes.includes('drive.file') || grantedScopes.includes('https://www.googleapis.com/auth/drive.file');
+          console.log('🔵 Verificando scopes recibidos:', grantedScopes);
+          
+          const hasDriveScope = grantedScopes.includes('drive.file') || 
+                                grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
+                                grantedScopes.includes('drive');
           
           if (!hasDriveScope) {
-            const errorMsg = `El token no incluye el scope de Google Drive necesario.\n\nScopes recibidos: ${grantedScopes}\n\nPor favor, intenta conectar nuevamente y asegúrate de aceptar todos los permisos solicitados.`;
+            const errorMsg = `❌ ERROR: El token no incluye el scope de Google Drive necesario.\n\n📋 Scopes solicitados:\n${requestedScopes}\n\n📋 Scopes recibidos:\n${grantedScopes}\n\n🔍 CAUSA PROBABLE:\nEl scope de Google Drive no está habilitado en la pantalla de consentimiento de OAuth en Google Cloud Console.\n\n✅ SOLUCIÓN:\n\n1. Ve a Google Cloud Console:\n   👉 https://console.cloud.google.com/apis/credentials/consent\n\n2. Selecciona tu proyecto\n\n3. En "Scopes", haz clic en "ADD OR REMOVE SCOPES"\n\n4. Busca y marca:\n   ✅ https://www.googleapis.com/auth/drive.file\n   (O busca "Google Drive API" y selecciona "drive.file")\n\n5. Guarda los cambios\n\n6. Espera 5-10 minutos para que los cambios se propaguen\n\n7. Intenta conectar nuevamente\n\n⚠️ NOTA: Si la app está en modo "Testing", asegúrate de que tu cuenta esté en la lista de "Test users".`;
             console.error('❌', errorMsg);
             reject(new Error(errorMsg));
             return;
