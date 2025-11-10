@@ -402,9 +402,15 @@ export const signInGoogle = async () => {
         }
       });
       
-      // Solicitar token con popup, forzando consentimiento completo (sin select_account)
-      // Esto fuerza a Google a mostrar la pantalla de consentimiento completa
-      tokenClient.requestAccessToken({ prompt: 'consent' });
+      // Generar un valor aleatorio para el parámetro state (protección CSRF)
+      const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      
+      // Solicitar token con popup, forzando consentimiento completo
+      // Incluimos el parámetro state para cumplir con las políticas de seguridad de Google
+      tokenClient.requestAccessToken({ 
+        prompt: 'consent',
+        state: stateValue
+      });
     });
   } catch (error) {
     console.error('Error en login:', error);
