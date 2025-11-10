@@ -21,6 +21,17 @@ const AppContent = () => {
     };
   }, [isDashboard]);
 
+  // Track page views with Google Analytics (gtag) for SPA route changes
+  useEffect(() => {
+    // Only track if gtag is available (loaded from index.html)
+    if (typeof window !== 'undefined' && window.gtag) {
+      const path = location.pathname + location.search;
+      window.gtag('config', 'G-CGH0T8KT90', {
+        page_path: path,
+      });
+    }
+  }, [location]);
+
   return (
     <div className={`app ${isDashboard ? 'app-dashboard' : ''}`}>
           <Navbar />
