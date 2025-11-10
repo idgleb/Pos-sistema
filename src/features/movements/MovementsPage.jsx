@@ -13,7 +13,8 @@ const MovementsPage = () => {
     type: 'sale',
     amount: '',
     note: '',
-    date: format(new Date(), 'yyyy-MM-dd')
+    date: format(new Date(), 'yyyy-MM-dd'),
+    time: format(new Date(), 'HH:mm')
   });
 
   // Filtros y búsqueda
@@ -199,11 +200,12 @@ const MovementsPage = () => {
     if (movement) {
       setEditingMovement(movement);
       
-      // Extraer la fecha del ISO string sin conversión de zona horaria
+      // Extraer la fecha y hora del ISO string sin conversión de zona horaria
       let dateValue = format(new Date(), 'yyyy-MM-dd');
+      let timeValue = format(new Date(), 'HH:mm');
+      
       if (movement.dateISO) {
         // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
-        // Esto evita problemas de zona horaria al cargar la fecha en el input
         const dateMatch = movement.dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
         if (dateMatch) {
           dateValue = dateMatch[1];
@@ -211,13 +213,23 @@ const MovementsPage = () => {
           // Fallback: usar parseISO si no hay match
           dateValue = format(parseISO(movement.dateISO), 'yyyy-MM-dd');
         }
+        
+        // Extraer la hora del ISO string (HH:mm)
+        const timeMatch = movement.dateISO.match(/T(\d{2}:\d{2})/);
+        if (timeMatch) {
+          timeValue = timeMatch[1];
+        } else {
+          // Fallback: usar parseISO si no hay match
+          timeValue = format(parseISO(movement.dateISO), 'HH:mm');
+        }
       }
       
       setFormData({
         type: movement.type,
         amount: (movement.amount / 100).toString(),
         note: movement.meta?.note || '',
-        date: dateValue
+        date: dateValue,
+        time: timeValue
       });
     } else {
       setEditingMovement(null);
@@ -225,7 +237,8 @@ const MovementsPage = () => {
         type: 'sale',
         amount: '',
         note: '',
-        date: format(new Date(), 'yyyy-MM-dd')
+        date: format(new Date(), 'yyyy-MM-dd'),
+        time: format(new Date(), 'HH:mm')
       });
     }
     setShowModal(true);
@@ -238,7 +251,8 @@ const MovementsPage = () => {
       type: 'sale',
       amount: '',
       note: '',
-      date: format(new Date(), 'yyyy-MM-dd')
+      date: format(new Date(), 'yyyy-MM-dd'),
+      time: format(new Date(), 'HH:mm')
     });
   };
 
@@ -255,10 +269,11 @@ const MovementsPage = () => {
       const meta = formData.note ? { note: formData.note } : {};
 
       if (editingMovement) {
-        // Construir ISO string directamente desde la fecha seleccionada
-        // formData.date ya está en formato 'yyyy-MM-dd', lo convertimos a ISO como UTC medianoche
+        // Construir ISO string directamente desde la fecha y hora seleccionadas
+        // formData.date está en formato 'yyyy-MM-dd' y formData.time en formato 'HH:mm'
+        // Lo convertimos a ISO como UTC con la hora seleccionada
         // Esto evita problemas de zona horaria que causan que se guarde un día antes
-        const dateISO = `${formData.date}T00:00:00.000Z`;
+        const dateISO = `${formData.date}T${formData.time}:00.000Z`;
         
         const updatedMovement = {
           ...editingMovement,
@@ -644,6 +659,15 @@ const MovementsPage = () => {
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Hora</label>
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
               />
             </div>
             
