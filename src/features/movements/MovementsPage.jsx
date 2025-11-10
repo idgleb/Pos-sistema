@@ -198,11 +198,26 @@ const MovementsPage = () => {
   const handleOpenModal = (movement = null) => {
     if (movement) {
       setEditingMovement(movement);
+      
+      // Extraer la fecha del ISO string sin conversión de zona horaria
+      let dateValue = format(new Date(), 'yyyy-MM-dd');
+      if (movement.dateISO) {
+        // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
+        // Esto evita problemas de zona horaria al cargar la fecha en el input
+        const dateMatch = movement.dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+          dateValue = dateMatch[1];
+        } else {
+          // Fallback: usar parseISO si no hay match
+          dateValue = format(parseISO(movement.dateISO), 'yyyy-MM-dd');
+        }
+      }
+      
       setFormData({
         type: movement.type,
         amount: (movement.amount / 100).toString(),
         note: movement.meta?.note || '',
-        date: format(parseISO(movement.dateISO), 'yyyy-MM-dd')
+        date: dateValue
       });
     } else {
       setEditingMovement(null);
@@ -240,11 +255,16 @@ const MovementsPage = () => {
       const meta = formData.note ? { note: formData.note } : {};
 
       if (editingMovement) {
+        // Construir ISO string directamente desde la fecha seleccionada
+        // formData.date ya está en formato 'yyyy-MM-dd', lo convertimos a ISO como UTC medianoche
+        // Esto evita problemas de zona horaria que causan que se guarde un día antes
+        const dateISO = `${formData.date}T00:00:00.000Z`;
+        
         const updatedMovement = {
           ...editingMovement,
           type: formData.type,
           amount: amountInCents,
-          dateISO: new Date(formData.date).toISOString(),
+          dateISO: dateISO,
           meta
         };
         actions.updateMovement(updatedMovement);
@@ -480,10 +500,26 @@ const MovementsPage = () => {
                 <div key={movement.id} className="table-row">
                   <div className="col-date">
                     <div className="date-main">
-                      {format(parseISO(movement.dateISO), 'dd/MM/yyyy', { locale: es })}
+                      {(() => {
+                        // Extraer solo la parte de la fecha (YYYY-MM-DD) del ISO string
+                        // Esto evita problemas de zona horaria al mostrar la fecha
+                        const dateMatch = movement.dateISO.match(/^(\d{4}-\d{2}-\d{2})/);
+                        if (dateMatch) {
+                          const [year, month, day] = dateMatch[1].split('-').map(Number);
+                          return format(new Date(year, month - 1, day), 'dd/MM/yyyy', { locale: es });
+                        }
+                        return format(parseISO(movement.dateISO), 'dd/MM/yyyy', { locale: es });
+                      })()}
                     </div>
                     <div className="date-time">
-                      {format(parseISO(movement.dateISO), 'HH:mm', { locale: es })}
+                      {(() => {
+                        // Extraer hora del ISO string
+                        const timeMatch = movement.dateISO.match(/T(\d{2}:\d{2})/);
+                        if (timeMatch) {
+                          return timeMatch[1];
+                        }
+                        return format(parseISO(movement.dateISO), 'HH:mm', { locale: es });
+                      })()}
                     </div>
                   </div>
                   <div className="col-type">
