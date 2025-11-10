@@ -438,7 +438,7 @@ const Navbar = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={closeLegalDropdown}
-                >
+            >
                   <span className="navbar-dropdown-icon">🏠</span>
                   <span className="navbar-dropdown-text">Home</span>
                 </a>
