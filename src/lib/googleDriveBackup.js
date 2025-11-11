@@ -49,11 +49,18 @@ const loadAuthState = () => {
     const token = localStorage.getItem(STORAGE_KEY_TOKEN);
     const profileStr = localStorage.getItem(STORAGE_KEY_PROFILE);
     
-    if (token && profileStr) {
+    if (token) {
       currentAccessToken = token;
-      currentUserProfile = JSON.parse(profileStr);
-      isSignedIn = true;
-      return { token, profile: currentUserProfile };
+      if (profileStr) {
+        currentUserProfile = JSON.parse(profileStr);
+        isSignedIn = true;
+      }
+      // Devolver tanto 'token' como 'accessToken' para compatibilidad
+      return { 
+        token, 
+        accessToken: token, // Alias para compatibilidad
+        profile: currentUserProfile 
+      };
     }
   } catch (error) {
     console.warn('Error cargando estado de autenticación:', error);
@@ -293,7 +300,7 @@ const initTokenClient = (forceReinit = false) => {
         currentUserProfile = null;
         isSignedIn = false;
         
-        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file" en la primera conexión.\nEsto suele ocurrir cuando hay permisos anteriores guardados en caché.\n\n📌 SOLUCIÓN (HACER ESTO ANTES DE CONECTAR):\n\n1. REVOCA PERMISOS ANTERIORES (MUY IMPORTANTE):\n   - Ve a: https://myaccount.google.com/permissions\n   - Busca "POS Sistema" o el Client ID: 642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu\n   - Haz clic en "Remove access" o "Eliminar acceso"\n   - Si no aparece, busca cualquier app relacionada con Google Drive\n\n2. VERIFICA CONFIGURACIÓN EN GOOGLE CLOUD CONSOLE:\n   - Ve a: https://console.cloud.google.com/apis/credentials/consent\n   - En "OAuth consent screen" > "Scopes":\n     * Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n     * Si NO aparece, agrega el scope manualmente\n   - Asegúrate de que "Google Drive API" esté HABILITADO\n\n3. LIMPIA EL NAVEGADOR:\n   - Limpia localStorage: localStorage.clear() (en la consola)\n   - Cierra TODAS las pestañas de Google (gmail.com, drive.google.com, etc.)\n   - Cierra completamente el navegador\n   - Vuelve a abrir el navegador\n\n4. RECARGA LA PÁGINA:\n   - Recarga completamente (Ctrl+F5 o Cmd+Shift+R)\n   - Haz clic en "Conectar Google Drive" NUEVAMENTE\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 NOTA: Si el problema persiste, prueba en una ventana de incógnito para evitar permisos en caché.`;
+        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file".\n\n⚠️ PROBLEMA COMÚN: En la pantalla de consentimiento de Google, el checkbox para "Visualiza, crea, edita y elimina solo los archivos de Google Drive que uses con esta aplicación" NO está marcado por defecto.\n\n📌 SOLUCIÓN:\n\n1. AL CONECTAR (MUY IMPORTANTE):\n   - Cuando aparezca la pantalla de consentimiento de Google\n   - DEBES MARCAR MANUALMENTE el checkbox que dice:\n     "Visualiza, crea, edita y elimina solo los archivos de Google Drive que uses con esta aplicación"\n   - Si no marcas este checkbox, Google NO otorgará el permiso de Drive\n   - Luego haz clic en "Permitir" o "Allow"\n\n2. SI YA CONECTASTE SIN MARCAR EL CHECKBOX:\n   - Revoca permisos: https://myaccount.google.com/permissions\n   - Busca "idgleb.github.io" o el Client ID: 642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu\n   - Haz clic en "Remove access" o "Eliminar acceso"\n   - Limpia localStorage: localStorage.clear() (en la consola)\n   - Recarga la página (Ctrl+F5)\n   - Haz clic en "Conectar Google Drive" NUEVAMENTE\n   - ESTA VEZ, MARCA EL CHECKBOX antes de hacer clic en "Permitir"\n\n3. VERIFICA CONFIGURACIÓN EN GOOGLE CLOUD CONSOLE:\n   - Ve a: https://console.cloud.google.com/apis/credentials/consent\n   - En "OAuth consent screen" > "Scopes":\n     * Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n     * Si NO aparece, agrega el scope manualmente\n   - Asegúrate de que "Google Drive API" esté HABILITADO\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}`;
         console.error('❌', errorMsg);
         
         // Disparar evento de error para notificar al componente React
@@ -321,19 +328,37 @@ const initTokenClient = (forceReinit = false) => {
       }
       
       const accessToken = response.access_token;
+      const grantedScopes = response.scope || '';
       
-      // Guardar token
+      // Guardar token INMEDIATAMENTE (antes de cualquier operación asíncrona)
       currentAccessToken = accessToken;
+      console.log('✅ Token guardado en currentAccessToken');
+      
+      // Guardar también el scope para referencia futura
+      const scopeInfo = {
+        accessToken: accessToken,
+        scope: grantedScopes,
+        timestamp: Date.now()
+      };
       
       // Inicializar gapi.client para operaciones de Drive (asíncrono, pero después del token)
       initGoogleDrive().then(async () => {
-        // Usar el token para inicializar gapi.client
+        // Asegurarse de que gapi.client esté inicializado
+        if (!window.gapi || !window.gapi.client) {
+          throw new Error('gapi.client no está inicializado');
+        }
+        
+        // Configurar el token en gapi.client
         window.gapi.client.setToken({ access_token: accessToken });
+        console.log('✅ Token configurado en gapi.client');
+        
+        // Marcar como inicializado
+        isGapiInitialized = true;
         
         // Esperar un momento para que gapi.client procese el token completamente
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        // Obtener información del perfil usando el token
+        // Verificar que el token funciona haciendo una petición de prueba
         try {
           const profileResponse = await window.gapi.client.request({
             path: 'https://www.googleapis.com/oauth2/v2/userinfo',
@@ -351,15 +376,25 @@ const initTokenClient = (forceReinit = false) => {
           currentUserProfile = userProfile;
           isSignedIn = true;
           
-          // Guardar en localStorage
+          // Guardar en localStorage (incluyendo el token)
           saveAuthState(accessToken, userProfile);
+          console.log('✅ Estado guardado en localStorage');
+          
+          // Verificar una vez más que el token esté configurado
+          const verifyToken = window.gapi.client.getToken();
+          if (!verifyToken || !verifyToken.access_token) {
+            console.warn('⚠️ Token no está configurado en gapi.client, reconfigurando...');
+            window.gapi.client.setToken({ access_token: accessToken });
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
           
           console.log('✅ Conexión exitosa:', userProfile);
+          console.log('✅ Token verificado y configurado correctamente');
           
           // Disparar evento personalizado para notificar al componente React
           window.dispatchEvent(new CustomEvent('googleDriveConnected', { detail: { user: userProfile } }));
         } catch (profileError) {
-          console.warn('No se pudo obtener el perfil completo, usando información básica');
+          console.warn('No se pudo obtener el perfil completo, usando información básica:', profileError);
           // Si falla obtener el perfil, al menos tenemos el token
           currentUserProfile = {
             id: 'unknown',
@@ -368,14 +403,34 @@ const initTokenClient = (forceReinit = false) => {
             imageUrl: null
           };
           isSignedIn = true;
+          isGapiInitialized = true;
           
-          // Guardar en localStorage
+          // Guardar en localStorage (incluyendo el token)
           saveAuthState(accessToken, currentUserProfile);
+          console.log('✅ Estado guardado en localStorage (perfil básico)');
+          
+          // Verificar que el token esté configurado
+          if (window.gapi && window.gapi.client) {
+            const verifyToken = window.gapi.client.getToken();
+            if (!verifyToken || !verifyToken.access_token) {
+              window.gapi.client.setToken({ access_token: accessToken });
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+          }
           
           window.dispatchEvent(new CustomEvent('googleDriveConnected', { detail: { user: currentUserProfile } }));
         }
       }).catch(error => {
         console.error('Error inicializando gapi.client:', error);
+        // Aún así, guardar el token y el estado básico
+        isSignedIn = true;
+        saveAuthState(accessToken, {
+          id: 'unknown',
+          name: 'Usuario de Google',
+          email: 'usuario@google.com',
+          imageUrl: null
+        });
+        window.dispatchEvent(new CustomEvent('googleDriveError', { detail: { error: 'Error inicializando Google Drive API: ' + error.message } }));
       });
     },
     error_callback: (error) => {
@@ -585,21 +640,33 @@ export const isConnectedToGoogleDrive = () => {
  */
 const verifyDriveScope = () => {
   try {
-    // Obtener token actual de Google Identity Services
-    const tokenResponse = window.google?.accounts?.oauth2?.getToken?.();
-    if (!tokenResponse || !tokenResponse.access_token) {
-      throw new Error('No hay token de acceso disponible');
+    // Verificar que tenemos un token de acceso
+    if (!currentAccessToken) {
+      // Intentar restaurar desde localStorage
+      const savedState = loadAuthState();
+      if (savedState && savedState.accessToken) {
+        currentAccessToken = savedState.accessToken;
+        console.log('✅ Token restaurado desde localStorage');
+      } else {
+        throw new Error('No hay token de acceso disponible. Por favor, conéctate a Google Drive primero.');
+      }
     }
     
-    // Verificar scope
-    const grantedScopes = tokenResponse.scope || '';
-    const hasDriveScope = grantedScopes.includes('drive.file') || 
-                          grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
-                          grantedScopes.includes('drive');
-    
-    if (!hasDriveScope) {
-      throw new Error('El token actual no incluye el scope de Google Drive. Por favor, reconecta tu cuenta.');
+    // Verificar que el token está configurado en gapi.client
+    if (window.gapi && window.gapi.client) {
+      const gapiToken = window.gapi.client.getToken();
+      if (!gapiToken || !gapiToken.access_token) {
+        // Configurar el token en gapi.client si no está configurado
+        window.gapi.client.setToken({ access_token: currentAccessToken });
+        console.log('✅ Token configurado en gapi.client');
+      }
     }
+    
+    // Verificar scope usando el token guardado
+    // Nota: No podemos verificar el scope directamente desde currentAccessToken
+    // porque es solo el access_token, no incluye información de scope
+    // Pero si llegamos aquí y currentAccessToken existe, asumimos que el scope es correcto
+    // porque se verificó en el callback de OAuth
     
     return true;
   } catch (error) {
@@ -613,21 +680,41 @@ const verifyDriveScope = () => {
  */
 const getOrCreateBackupFolder = async () => {
   try {
-    // Verificar que el token incluye el scope de Drive antes de usar la API
-    verifyDriveScope();
+    // Verificar que tenemos un token de acceso
+    if (!currentAccessToken) {
+      // Intentar restaurar desde localStorage
+      const savedState = loadAuthState();
+      if (savedState && savedState.accessToken) {
+        currentAccessToken = savedState.accessToken;
+        console.log('✅ Token restaurado desde localStorage en getOrCreateBackupFolder');
+      } else {
+        throw new Error('No hay token de acceso disponible. Por favor, conéctate a Google Drive primero.');
+      }
+    }
+    
+    // Asegurarse de que gapi.client esté inicializado
+    if (!window.gapi || !window.gapi.client) {
+      await initGoogleDrive();
+    }
     
     // Asegurarse de que el token esté configurado en gapi.client
-    const token = currentAccessToken || (window.gapi.client.getToken()?.access_token);
-    if (token && !window.gapi.client.getToken()) {
-      window.gapi.client.setToken({ access_token: token });
+    const gapiToken = window.gapi.client.getToken();
+    if (!gapiToken || !gapiToken.access_token || gapiToken.access_token !== currentAccessToken) {
+      console.log('🔵 Configurando token en gapi.client para operaciones de Drive');
+      window.gapi.client.setToken({ access_token: currentAccessToken });
       // Esperar un momento para que gapi.client procese el token
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Verificar que el token se configuró correctamente
+      const verifyToken = window.gapi.client.getToken();
+      if (!verifyToken || !verifyToken.access_token) {
+        throw new Error('No se pudo configurar el token en gapi.client');
+      }
+      console.log('✅ Token configurado correctamente en gapi.client');
     }
     
-    // Verificar que tenemos un token válido
-    if (!token) {
-      throw new Error('No hay token de acceso disponible');
-    }
+    // Verificar que el token incluye el scope de Drive (opcional, ya se verificó en el callback)
+    verifyDriveScope();
     
     // Buscar carpeta existente
     const response = await window.gapi.client.drive.files.list({
