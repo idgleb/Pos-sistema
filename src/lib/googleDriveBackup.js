@@ -255,7 +255,7 @@ const initTokenClient = () => {
   tokenClient = window.google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: requestedScopes,
-    prompt: 'consent', // Fuerza pantalla de consentimiento
+    prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
     include_granted_scopes: false, // CRÍTICO: NO mezclar con grants viejos
     callback: async (response) => {
       isClicking = false; // Liberar debounce
@@ -433,15 +433,28 @@ export const signInGoogle = async () => {
       // Marcar que estamos haciendo click (debounce)
       isClicking = true;
       
+      // Revocar token anterior si existe (para forzar nuevo consentimiento)
+      try {
+        const existingToken = window.google?.accounts?.oauth2?.getToken?.();
+        if (existingToken && existingToken.access_token) {
+          console.log('🔵 Revocando token anterior para forzar nuevo consentimiento...');
+          window.google.accounts.oauth2.revoke(existingToken.access_token, () => {
+            console.log('✅ Token anterior revocado');
+          });
+        }
+      } catch (revokeError) {
+        console.warn('No se pudo revocar token anterior (puede que no exista):', revokeError);
+      }
+      
       // Generar un valor aleatorio para el parámetro state (protección CSRF)
       const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
       // CRÍTICO: requestAccessToken() debe llamarse DIRECTAMENTE en respuesta al gesto del usuario
       // NO usar setTimeout ni promesas antes de esta llamada
-      console.log('🔵 Solicitando token con prompt: consent');
+      console.log('🔵 Solicitando token con prompt: select_account consent');
       
       tokenClient.requestAccessToken({ 
-        prompt: 'consent', // Fuerza pantalla de consentimiento
+        prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
         state: stateValue,
         // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
         include_granted_scopes: false
