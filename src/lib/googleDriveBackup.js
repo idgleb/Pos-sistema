@@ -292,8 +292,9 @@ export const signInGoogle = async () => {
       });
     }
     
-    // Construir scopes explícitamente para asegurar que Drive esté incluido
-    const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid profile email';
+    // Construir scopes explícitamente usando URLs completos (no abreviados)
+    // IMPORTANTE: Usar URLs completos para evitar que Google ignore scopes
+    const requestedScopes = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid';
     
     console.log('🔵 Solicitando scopes:', requestedScopes);
     console.log('🔵 Client ID:', CLIENT_ID);
@@ -342,7 +343,7 @@ export const signInGoogle = async () => {
             currentUserProfile = null;
             isSignedIn = false;
             
-            const errorMsg = `🚫 CONFIGURACIÓN REQUERIDA EN GOOGLE CLOUD CONSOLE\n\nEl scope de Google Drive NO está habilitado en tu configuración de OAuth.\nGoogle está ignorando el scope solicitado porque no está en la lista de scopes permitidos.\n\n⚠️ ESTO NO SE PUEDE SOLUCIONAR DESDE EL CÓDIGO\nDebes habilitar el scope en Google Cloud Console:\n\n📌 PASOS CRÍTICOS:\n\n1. Ve a: Google Auth Platform → Data Access\n2. Haz clic en "Add or remove scopes"\n3. Busca y MARCA: "https://www.googleapis.com/auth/drive.file"\n4. Guarda los cambios\n5. IMPORTANTE: Revoca permisos anteriores en tu cuenta de Google\n6. Espera 20-30 minutos y vuelve a intentar\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El código está correcto. El problema es la configuración en Google Cloud Console.`;
+            const errorMsg = `🚫 CONFIGURACIÓN REQUERIDA EN GOOGLE CLOUD CONSOLE\n\nEl scope de Google Drive NO está siendo otorgado por Google.\nGoogle está ignorando el scope solicitado porque NO está habilitado en la pantalla de consentimiento de OAuth.\n\n⚠️ ESTO NO SE PUEDE SOLUCIONAR DESDE EL CÓDIGO\nDebes habilitar el scope en DOS lugares en Google Cloud Console:\n\n📌 PASO 1: Habilitar Google Drive API\n1. Ve a: https://console.cloud.google.com/apis/library/drive.googleapis.com\n2. Haz clic en "ENABLE"\n\n📌 PASO 2: Agregar scope en OAuth Consent Screen\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Haz clic en "EDIT APP"\n3. Ve a la sección "SCOPES"\n4. Haz clic en "ADD OR REMOVE SCOPES"\n5. Busca y MARCA: "https://www.googleapis.com/auth/drive.file"\n   (Busca "Google Drive API" → "drive.file")\n6. Haz clic en "UPDATE" y luego "SAVE AND CONTINUE"\n\n📌 PASO 3: Verificar en Data Access (opcional pero recomendado)\n1. En la misma pantalla, ve a "Data Access"\n2. Verifica que "https://www.googleapis.com/auth/drive.file" esté en la lista\n3. Si no está, agrégalo\n\n📌 PASO 4: Revocar permisos anteriores\n1. Ve a: https://myaccount.google.com/permissions\n2. Busca tu app y haz clic en "Remove access"\n\n📌 PASO 5: Esperar y probar\n1. Espera 20-30 minutos para que los cambios se propaguen\n2. Limpia la caché del navegador (Ctrl+Shift+Delete)\n3. Recarga la página completamente (Ctrl+F5)\n4. Intenta conectar de nuevo\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El código está correcto. El problema es que el scope NO está habilitado en la pantalla de consentimiento de OAuth.`;
             console.error('❌', errorMsg);
             reject(new Error(errorMsg));
             return;
