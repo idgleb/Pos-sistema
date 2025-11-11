@@ -328,18 +328,10 @@ const initTokenClient = (forceReinit = false) => {
       }
       
       const accessToken = response.access_token;
-      const grantedScopes = response.scope || '';
       
       // Guardar token INMEDIATAMENTE (antes de cualquier operación asíncrona)
       currentAccessToken = accessToken;
       console.log('✅ Token guardado en currentAccessToken');
-      
-      // Guardar también el scope para referencia futura
-      const scopeInfo = {
-        accessToken: accessToken,
-        scope: grantedScopes,
-        timestamp: Date.now()
-      };
       
       // Inicializar gapi.client para operaciones de Drive (asíncrono, pero después del token)
       initGoogleDrive().then(async () => {
