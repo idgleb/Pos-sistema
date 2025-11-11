@@ -293,7 +293,7 @@ const initTokenClient = (forceReinit = false) => {
         currentUserProfile = null;
         isSignedIn = false;
         
-        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file".\n\n📌 VERIFICAR EN GOOGLE CLOUD CONSOLE:\n\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Asegúrate de que "Google Drive API" esté HABILITADO en:\n   - APIs & Services > Library > Google Drive API (debe estar "Enabled")\n\n3. En "OAuth consent screen" > "Scopes":\n   - Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n   - Si NO aparece, haz clic en "ADD OR REMOVE SCOPES"\n   - Busca "Google Drive API"\n   - Marca: "https://www.googleapis.com/auth/drive.file"\n   - Guarda los cambios\n\n4. Si la app está en "Testing", asegúrate de que tu cuenta esté en "Test users"\n\n5. Si la app está en "Production", puede tomar hasta 7 días para que los cambios se aprueben\n\n📌 DESPUÉS DE VERIFICAR:\n1. Revoca permisos anteriores: https://myaccount.google.com/permissions\n2. Limpia localStorage: localStorage.clear()\n3. Espera 10-15 minutos para que Google actualice su caché\n4. Recarga la página completamente (Ctrl+F5)\n5. Haz clic en "Conectar Google Drive" NUEVAMENTE\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}`;
+        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file" en la primera conexión.\nEsto suele ocurrir cuando hay permisos anteriores guardados en caché.\n\n📌 SOLUCIÓN (HACER ESTO ANTES DE CONECTAR):\n\n1. REVOCA PERMISOS ANTERIORES (MUY IMPORTANTE):\n   - Ve a: https://myaccount.google.com/permissions\n   - Busca "POS Sistema" o el Client ID: 642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu\n   - Haz clic en "Remove access" o "Eliminar acceso"\n   - Si no aparece, busca cualquier app relacionada con Google Drive\n\n2. VERIFICA CONFIGURACIÓN EN GOOGLE CLOUD CONSOLE:\n   - Ve a: https://console.cloud.google.com/apis/credentials/consent\n   - En "OAuth consent screen" > "Scopes":\n     * Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n     * Si NO aparece, agrega el scope manualmente\n   - Asegúrate de que "Google Drive API" esté HABILITADO\n\n3. LIMPIA EL NAVEGADOR:\n   - Limpia localStorage: localStorage.clear() (en la consola)\n   - Cierra TODAS las pestañas de Google (gmail.com, drive.google.com, etc.)\n   - Cierra completamente el navegador\n   - Vuelve a abrir el navegador\n\n4. RECARGA LA PÁGINA:\n   - Recarga completamente (Ctrl+F5 o Cmd+Shift+R)\n   - Haz clic en "Conectar Google Drive" NUEVAMENTE\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 NOTA: Si el problema persiste, prueba en una ventana de incógnito para evitar permisos en caché.`;
         console.error('❌', errorMsg);
         
         // Disparar evento de error para notificar al componente React
@@ -508,14 +508,17 @@ export const signInGoogle = () => {
     
     // CRÍTICO: requestAccessToken() debe llamarse DIRECTAMENTE en respuesta al gesto del usuario
     // NO usar setTimeout ni promesas antes de esta llamada
-    console.log('🔵 Solicitando token con prompt: select_account consent (forzando consentimiento completo)');
+    console.log('🔵 Solicitando token con prompt: consent (forzando consentimiento completo sin selección de cuenta)');
     
-    // Llamar directamente sin ningún await antes
+    // Usar solo 'consent' para forzar SIEMPRE la pantalla de consentimiento
+    // Esto es más agresivo que 'select_account consent' y fuerza el consentimiento incluso si hay una sesión activa
     tokenClient.requestAccessToken({ 
-      prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento COMPLETA
+      prompt: 'consent', // Fuerza pantalla de consentimiento COMPLETA (sin selección de cuenta para ser más agresivo)
       state: stateValue,
       // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
-      include_granted_scopes: false
+      include_granted_scopes: false,
+      // Solicitar explícitamente los scopes (aunque ya están en initTokenClient)
+      scope: 'https://www.googleapis.com/auth/drive.file openid email profile'
     });
   });
 };
