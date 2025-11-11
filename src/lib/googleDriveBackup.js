@@ -165,7 +165,7 @@ export const initGoogleDrive = () => {
                 error.message?.includes('idpiframe') ||
                 error.details?.includes('idpiframe') ||
                 error.details?.includes('Not a valid origin')) {
-              console.warn('⚠️ Google API iframe falló (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
+              console.debug('⚠️ Google API iframe falló (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
               // Marcar como inicializado de todas formas para permitir que el popup funcione
               isGapiInitialized = true;
               
@@ -294,7 +294,7 @@ export const signInGoogle = async () => {
     
     // Construir scopes explícitamente usando URLs completos (no abreviados)
     // IMPORTANTE: Usar URLs completos para evitar que Google ignore scopes
-    const requestedScopes = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid';
+    const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid email profile';
     
     console.log('🔵 Solicitando scopes:', requestedScopes);
     console.log('🔵 Client ID:', CLIENT_ID);
@@ -310,15 +310,19 @@ export const signInGoogle = async () => {
     
     console.log(`🔵 Primera conexión: ${isFirstConnection}, usando prompt: ${promptValue}`);
     
-    return new Promise((resolve, reject) => {
-      let tokenClient = null;
-      let accessToken = null;
-      let userProfile = null;
-      
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: requestedScopes,
-        callback: async (response) => {
+    // Función para solicitar token con retry automático si falta el scope
+    const requestTokenWithRetry = (attemptNumber = 1) => {
+      return new Promise((resolve, reject) => {
+        let tokenClient = null;
+        let accessToken = null;
+        let userProfile = null;
+        
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: requestedScopes,
+          // CRÍTICO: include_granted_scopes: false evita mezclar con permisos viejos
+          include_granted_scopes: false,
+          callback: async (response) => {
           console.log('Callback de Google OAuth recibido:', response);
           
           if (response.error) {
@@ -328,28 +332,42 @@ export const signInGoogle = async () => {
           
           accessToken = response.access_token;
           
-          // Verificar que el token incluya el scope de Drive
-          const grantedScopes = response.scope || '';
-          console.log('🔵 Verificando scopes recibidos:', grantedScopes);
-          
-          const hasDriveScope = grantedScopes.includes('drive.file') || 
-                                grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
-                                grantedScopes.includes('drive');
-          
-          if (!hasDriveScope) {
-            // Limpiar estado guardado para forzar nueva autenticación
-            clearAuthState();
-            currentAccessToken = null;
-            currentUserProfile = null;
-            isSignedIn = false;
+            // Verificar que el token incluya el scope de Drive
+            const grantedScopes = response.scope || '';
+            console.log(`🔵 Verificando scopes recibidos (intento ${attemptNumber}):`, grantedScopes);
             
-            const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nEl scope de Google Drive está configurado correctamente en Google Cloud Console,\npero Google NO lo está otorgando porque está usando permisos anteriores en caché.\n\n✅ VERIFICACIÓN:\nEl scope "drive.file" YA está en "Data Access" de tu consola de OAuth.\nEl problema es que Google está usando permisos anteriores que no incluyen Drive.\n\n📌 SOLUCIÓN: Revocar permisos anteriores y reconectar\n\n1. Revoca permisos anteriores en tu cuenta de Google:\n   👉 https://myaccount.google.com/permissions\n   - Busca tu app "POS Sistema" o el Client ID\n   - Haz clic en "Remove access" o "Eliminar acceso"\n\n2. Limpia el localStorage de esta aplicación:\n   - Abre la consola del navegador (F12)\n   - Ejecuta: localStorage.clear()\n   - O usa una ventana de incógnito\n\n3. Espera 5-10 minutos para que Google actualice su caché\n\n4. Recarga la página completamente (Ctrl+F5)\n\n5. Intenta conectar Google Drive de nuevo\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El scope está configurado correctamente. Necesitas revocar los permisos anteriores para que Google otorgue el scope de Drive.`;
-            console.error('❌', errorMsg);
-            reject(new Error(errorMsg));
-            return;
-          }
-          
-          console.log('✅ Token incluye scope de Google Drive:', grantedScopes);
+            // Verificación robusta del scope de Drive
+            const hasDriveScope = grantedScopes.includes('drive.file') || 
+                                  grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
+                                  grantedScopes.includes('drive');
+            
+            if (!hasDriveScope) {
+              // Si es el primer intento, intentar una vez más con consent forzado
+              if (attemptNumber === 1) {
+                console.warn(`⚠️ El scope de Drive no está presente en el intento ${attemptNumber}. Intentando nuevamente con consent forzado...`);
+                // Limpiar estado antes del segundo intento
+                clearAuthState();
+                currentAccessToken = null;
+                currentUserProfile = null;
+                isSignedIn = false;
+                
+                // Retry con consent forzado
+                setTimeout(() => {
+                  requestTokenWithRetry(2)
+                    .then(resolve)
+                    .catch(reject);
+                }, 500);
+                return;
+              }
+              
+              // Si ya intentamos dos veces y sigue sin el scope, mostrar error detallado
+              const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nEl scope de Google Drive está configurado correctamente en Google Cloud Console,\npero Google NO lo está otorgando porque está usando permisos anteriores en caché.\n\n✅ VERIFICACIÓN:\nEl scope "drive.file" YA está en "Data Access" de tu consola de OAuth.\nEl problema es que Google está usando permisos anteriores que no incluyen Drive.\n\n📌 SOLUCIÓN: Revocar permisos anteriores y reconectar\n\n1. Revoca permisos anteriores en tu cuenta de Google:\n   👉 https://myaccount.google.com/permissions\n   - Busca tu app "POS Sistema" o el Client ID\n   - Haz clic en "Remove access" o "Eliminar acceso"\n\n2. Limpia el localStorage de esta aplicación:\n   - Abre la consola del navegador (F12)\n   - Ejecuta: localStorage.clear()\n   - O usa una ventana de incógnito\n\n3. Espera 5-10 minutos para que Google actualice su caché\n\n4. Recarga la página completamente (Ctrl+F5)\n\n5. Intenta conectar Google Drive de nuevo\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El scope está configurado correctamente. Necesitas revocar los permisos anteriores para que Google otorgue el scope de Drive.`;
+              console.error('❌', errorMsg);
+              reject(new Error(errorMsg));
+              return;
+            }
+            
+            console.log(`✅ Token incluye scope de Google Drive (intento ${attemptNumber}):`, grantedScopes);
             
             // Guardar token y perfil
             currentAccessToken = accessToken;
@@ -415,13 +433,21 @@ export const signInGoogle = async () => {
         const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         
         // Solicitar token con popup usando el prompt apropiado
-        console.log(`🔵 Solicitando token con prompt: ${promptValue}`);
+        // En el segundo intento, forzar consent completo
+        const finalPrompt = attemptNumber === 2 ? 'consent' : promptValue;
+        console.log(`🔵 Solicitando token (intento ${attemptNumber}) con prompt: ${finalPrompt}`);
         
         tokenClient.requestAccessToken({ 
-          prompt: promptValue,
-          state: stateValue
+          prompt: finalPrompt,
+          state: stateValue,
+          // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
+          include_granted_scopes: false
         });
       });
+    };
+    
+    // Iniciar el primer intento
+    return requestTokenWithRetry(1);
   } catch (error) {
     console.error('Error en login:', error);
     console.error('Error details:', {
@@ -553,10 +579,41 @@ export const isConnectedToGoogleDrive = () => {
 };
 
 /**
+ * Verificar que el token actual incluye el scope de Drive
+ */
+const verifyDriveScope = () => {
+  try {
+    // Obtener token actual de Google Identity Services
+    const tokenResponse = window.google?.accounts?.oauth2?.getToken?.();
+    if (!tokenResponse || !tokenResponse.access_token) {
+      throw new Error('No hay token de acceso disponible');
+    }
+    
+    // Verificar scope
+    const grantedScopes = tokenResponse.scope || '';
+    const hasDriveScope = grantedScopes.includes('drive.file') || 
+                          grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
+                          grantedScopes.includes('drive');
+    
+    if (!hasDriveScope) {
+      throw new Error('El token actual no incluye el scope de Google Drive. Por favor, reconecta tu cuenta.');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error verificando scope de Drive:', error);
+    throw error;
+  }
+};
+
+/**
  * Crear o obtener carpeta de backups en Google Drive
  */
 const getOrCreateBackupFolder = async () => {
   try {
+    // Verificar que el token incluye el scope de Drive antes de usar la API
+    verifyDriveScope();
+    
     // Asegurarse de que el token esté configurado en gapi.client
     const token = currentAccessToken || (window.gapi.client.getToken()?.access_token);
     if (token && !window.gapi.client.getToken()) {
