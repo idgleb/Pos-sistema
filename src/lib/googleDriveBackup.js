@@ -238,10 +238,11 @@ const loadGoogleIdentityServices = () => {
 };
 
 /**
- * Inicializar Token Client de GIS (síncrono, se llama una vez)
+ * Inicializar Token Client de GIS (se puede llamar múltiples veces para forzar nuevo consentimiento)
  */
-const initTokenClient = () => {
-  if (isTokenClientInitialized && tokenClient) {
+const initTokenClient = (forceReinit = false) => {
+  // Si ya está inicializado y no se fuerza reinicialización, reutilizar
+  if (!forceReinit && isTokenClientInitialized && tokenClient) {
     return;
   }
   
@@ -252,10 +253,16 @@ const initTokenClient = () => {
   
   const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid email profile';
   
+  // Si se fuerza reinicialización, limpiar el cliente anterior
+  if (forceReinit) {
+    tokenClient = null;
+    isTokenClientInitialized = false;
+  }
+  
   tokenClient = window.google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: requestedScopes,
-    prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
+    prompt: '', // NO establecer prompt aquí, se establecerá en requestAccessToken()
     include_granted_scopes: false, // CRÍTICO: NO mezclar con grants viejos
     callback: async (response) => {
       isClicking = false; // Liberar debounce
@@ -433,16 +440,17 @@ export const signInGoogle = () => {
       return;
     }
     
-    // Verificar que tokenClient esté inicializado
+    // REINICIALIZAR tokenClient en cada conexión para evitar permisos en caché
+    // Esto es crítico para la primera conexión: asegura que siempre se use un cliente fresco
+    console.log('🔵 Reinicializando tokenClient para forzar consentimiento completo...');
+    initTokenClient(true); // forceReinit = true
+    
     if (!tokenClient) {
-      initTokenClient();
-      if (!tokenClient) {
-        reject({
-          success: false,
-          error: 'No se pudo inicializar el cliente de token'
-        });
-        return;
-      }
+      reject({
+        success: false,
+        error: 'No se pudo inicializar el cliente de token'
+      });
+      return;
     }
     
     // Configurar listener para el evento de conexión exitosa
@@ -470,29 +478,41 @@ export const signInGoogle = () => {
     // Marcar que estamos haciendo click (debounce)
     isClicking = true;
     
-    // Revocar token anterior si existe (para forzar nuevo consentimiento)
+    // LIMPIAR ESTADO ANTES DE SOLICITAR TOKEN (para forzar consentimiento completo)
+    // Esto es crítico para la primera conexión: limpia cualquier estado previo
+    console.log('🔵 Limpiando estado previo para forzar consentimiento completo...');
+    
+    // 1. Limpiar estado local
+    clearAuthState();
+    currentAccessToken = null;
+    currentUserProfile = null;
+    isSignedIn = false;
+    
+    // 2. Intentar revocar token anterior si existe (síncrono, no esperamos callback)
     try {
       const existingToken = window.google?.accounts?.oauth2?.getToken?.();
       if (existingToken && existingToken.access_token) {
-        console.log('🔵 Revocando token anterior para forzar nuevo consentimiento...');
+        console.log('🔵 Revocando token anterior...');
+        // Revocar de forma asíncrona (no esperamos, pero se ejecuta)
         window.google.accounts.oauth2.revoke(existingToken.access_token, () => {
           console.log('✅ Token anterior revocado');
         });
       }
     } catch (revokeError) {
-      console.warn('No se pudo revocar token anterior (puede que no exista):', revokeError);
+      // Ignorar error si no hay token para revocar
+      console.debug('No hay token anterior para revocar (normal en primera conexión)');
     }
     
-    // Generar un valor aleatorio para el parámetro state (protección CSRF)
+    // 3. Generar un valor aleatorio para el parámetro state (protección CSRF)
     const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     
     // CRÍTICO: requestAccessToken() debe llamarse DIRECTAMENTE en respuesta al gesto del usuario
     // NO usar setTimeout ni promesas antes de esta llamada
-    console.log('🔵 Solicitando token con prompt: select_account consent');
+    console.log('🔵 Solicitando token con prompt: select_account consent (forzando consentimiento completo)');
     
     // Llamar directamente sin ningún await antes
     tokenClient.requestAccessToken({ 
-      prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
+      prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento COMPLETA
       state: stateValue,
       // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
       include_granted_scopes: false
