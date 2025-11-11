@@ -286,7 +286,7 @@ const initTokenClient = () => {
         currentUserProfile = null;
         isSignedIn = false;
         
-        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file".\n\n📌 SOLUCIÓN:\n1. Revoca permisos anteriores: https://myaccount.google.com/permissions\n2. Limpia localStorage: localStorage.clear()\n3. Espera 5-10 minutos\n4. Haz clic en "Conectar Google Drive" NUEVAMENTE\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}`;
+        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file".\n\n📌 VERIFICAR EN GOOGLE CLOUD CONSOLE:\n\n1. Ve a: https://console.cloud.google.com/apis/credentials/consent\n2. Asegúrate de que "Google Drive API" esté HABILITADO en:\n   - APIs & Services > Library > Google Drive API (debe estar "Enabled")\n\n3. En "OAuth consent screen" > "Scopes":\n   - Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n   - Si NO aparece, haz clic en "ADD OR REMOVE SCOPES"\n   - Busca "Google Drive API"\n   - Marca: "https://www.googleapis.com/auth/drive.file"\n   - Guarda los cambios\n\n4. Si la app está en "Testing", asegúrate de que tu cuenta esté en "Test users"\n\n5. Si la app está en "Production", puede tomar hasta 7 días para que los cambios se aprueben\n\n📌 DESPUÉS DE VERIFICAR:\n1. Revoca permisos anteriores: https://myaccount.google.com/permissions\n2. Limpia localStorage: localStorage.clear()\n3. Espera 10-15 minutos para que Google actualice su caché\n4. Recarga la página completamente (Ctrl+F5)\n5. Haz clic en "Conectar Google Drive" NUEVAMENTE\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}`;
         console.error('❌', errorMsg);
         
         // Disparar evento de error para notificar al componente React
@@ -385,101 +385,118 @@ const initTokenClient = () => {
 };
 
 /**
+ * Inicializar GIS al cargar la aplicación (se llama una vez al inicio)
+ */
+export const initializeGoogleIdentityServices = async () => {
+  try {
+    // Cargar Google Identity Services si no está cargado
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+      await loadGoogleIdentityServices();
+    }
+    
+    // Inicializar tokenClient (síncrono, se hace una vez)
+    initTokenClient();
+    
+    console.log('✅ Google Identity Services inicializado');
+    return true;
+  } catch (error) {
+    console.error('Error inicializando Google Identity Services:', error);
+    return false;
+  }
+};
+
+/**
  * Iniciar sesión con Google usando Google Identity Services
  * IMPORTANTE: Esta función debe llamarse directamente desde el handler del click
  * NO debe tener awaits antes de requestAccessToken()
+ * 
+ * Esta función retorna una Promise que se resuelve cuando se completa la conexión
  */
-export const signInGoogle = async () => {
-  return new Promise(async (resolve, reject) => {
+export const signInGoogle = () => {
+  return new Promise((resolve, reject) => {
     // Debounce: evitar múltiples clicks
     if (isClicking) {
       console.warn('Ya hay una solicitud de conexión en proceso');
+      reject({
+        success: false,
+        error: 'Ya hay una solicitud de conexión en proceso'
+      });
       return;
     }
     
-    try {
-      // Cargar Google Identity Services si no está cargado
-      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-        await loadGoogleIdentityServices();
-      }
-      
-      // Inicializar tokenClient (síncrono, se hace una vez)
-      initTokenClient();
-      
-      if (!tokenClient) {
-        reject(new Error('No se pudo inicializar el cliente de token'));
-        return;
-      }
-      
-      // Configurar listener para el evento de conexión exitosa
-      const handleConnection = (event) => {
-        window.removeEventListener('googleDriveConnected', handleConnection);
-        window.removeEventListener('googleDriveError', handleError);
-        resolve({
-          success: true,
-          user: event.detail.user
-        });
-      };
-      
-      const handleError = (event) => {
-        window.removeEventListener('googleDriveConnected', handleConnection);
-        window.removeEventListener('googleDriveError', handleError);
-        reject(new Error(event.detail.error));
-      };
-      
-      window.addEventListener('googleDriveConnected', handleConnection);
-      window.addEventListener('googleDriveError', handleError);
-      
-      // Marcar que estamos haciendo click (debounce)
-      isClicking = true;
-      
-      // Revocar token anterior si existe (para forzar nuevo consentimiento)
-      try {
-        const existingToken = window.google?.accounts?.oauth2?.getToken?.();
-        if (existingToken && existingToken.access_token) {
-          console.log('🔵 Revocando token anterior para forzar nuevo consentimiento...');
-          window.google.accounts.oauth2.revoke(existingToken.access_token, () => {
-            console.log('✅ Token anterior revocado');
-          });
-        }
-      } catch (revokeError) {
-        console.warn('No se pudo revocar token anterior (puede que no exista):', revokeError);
-      }
-      
-      // Generar un valor aleatorio para el parámetro state (protección CSRF)
-      const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      
-      // CRÍTICO: requestAccessToken() debe llamarse DIRECTAMENTE en respuesta al gesto del usuario
-      // NO usar setTimeout ni promesas antes de esta llamada
-      console.log('🔵 Solicitando token con prompt: select_account consent');
-      
-      tokenClient.requestAccessToken({ 
-        prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
-        state: stateValue,
-        // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
-        include_granted_scopes: false
-      });
-    } catch (error) {
-      isClicking = false; // Liberar debounce
-      console.error('Error en login:', error);
-      
-      // Manejar diferentes tipos de errores
-      if (error.error === 'popup_closed_by_user' || error.error === 'popup_blocked' || error.type === 'popup_failed_to_open') {
-        reject({
-          success: false,
-          cancelled: true,
-          error: 'El popup fue bloqueado o cerrado. Por favor, permite popups para este sitio e intenta de nuevo.'
-        });
-        return;
-      }
-      
-      // Error genérico
-      const errorMessage = error.error || error.message || error.type || 'Error desconocido';
+    // Verificar que GIS esté cargado
+    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
       reject({
         success: false,
-        error: `Error al iniciar sesión: ${errorMessage}`
+        error: 'Google Identity Services no está cargado. Por favor, recarga la página.'
       });
+      return;
     }
+    
+    // Verificar que tokenClient esté inicializado
+    if (!tokenClient) {
+      initTokenClient();
+      if (!tokenClient) {
+        reject({
+          success: false,
+          error: 'No se pudo inicializar el cliente de token'
+        });
+        return;
+      }
+    }
+    
+    // Configurar listener para el evento de conexión exitosa
+    const handleConnection = (event) => {
+      window.removeEventListener('googleDriveConnected', handleConnection);
+      window.removeEventListener('googleDriveError', handleError);
+      resolve({
+        success: true,
+        user: event.detail.user
+      });
+    };
+    
+    const handleError = (event) => {
+      window.removeEventListener('googleDriveConnected', handleConnection);
+      window.removeEventListener('googleDriveError', handleError);
+      reject({
+        success: false,
+        error: event.detail.error
+      });
+    };
+    
+    window.addEventListener('googleDriveConnected', handleConnection);
+    window.addEventListener('googleDriveError', handleError);
+    
+    // Marcar que estamos haciendo click (debounce)
+    isClicking = true;
+    
+    // Revocar token anterior si existe (para forzar nuevo consentimiento)
+    try {
+      const existingToken = window.google?.accounts?.oauth2?.getToken?.();
+      if (existingToken && existingToken.access_token) {
+        console.log('🔵 Revocando token anterior para forzar nuevo consentimiento...');
+        window.google.accounts.oauth2.revoke(existingToken.access_token, () => {
+          console.log('✅ Token anterior revocado');
+        });
+      }
+    } catch (revokeError) {
+      console.warn('No se pudo revocar token anterior (puede que no exista):', revokeError);
+    }
+    
+    // Generar un valor aleatorio para el parámetro state (protección CSRF)
+    const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    // CRÍTICO: requestAccessToken() debe llamarse DIRECTAMENTE en respuesta al gesto del usuario
+    // NO usar setTimeout ni promesas antes de esta llamada
+    console.log('🔵 Solicitando token con prompt: select_account consent');
+    
+    // Llamar directamente sin ningún await antes
+    tokenClient.requestAccessToken({ 
+      prompt: 'select_account consent', // Fuerza selección de cuenta y pantalla de consentimiento
+      state: stateValue,
+      // CRÍTICO: No incluir scopes anteriores para evitar mezclar con permisos viejos
+      include_granted_scopes: false
+    });
   });
 };
 

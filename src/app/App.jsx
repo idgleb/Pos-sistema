@@ -3,11 +3,19 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AppRoutes from './routes';
 import StoreProvider from './store/StoreProvider';
+import { initializeGoogleIdentityServices } from '../lib/googleDriveBackup';
 import './App.css';
 
 const AppContent = () => {
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
+
+  // Inicializar Google Identity Services al cargar la aplicación
+  useEffect(() => {
+    initializeGoogleIdentityServices().catch(error => {
+      console.warn('Error inicializando Google Identity Services:', error);
+    });
+  }, []);
 
   useEffect(() => {
     if (isDashboard) {
