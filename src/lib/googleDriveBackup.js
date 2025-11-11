@@ -292,126 +292,143 @@ export const signInGoogle = async () => {
       });
     }
     
-    // Inicializar cliente de token OAuth
-    let tokenClient = null;
-    let accessToken = null;
-    let userProfile = null;
+    // Construir scopes explícitamente para asegurar que Drive esté incluido
+    const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid profile email';
     
-    return new Promise((resolve, reject) => {
-      // Construir scopes explícitamente para asegurar que Drive esté incluido
-      // IMPORTANTE: El scope de Drive debe estar primero y ser explícito
-      const requestedScopes = 'https://www.googleapis.com/auth/drive.file openid profile email';
-      
-      console.log('🔵 Solicitando scopes:', requestedScopes);
-      console.log('🔵 Client ID:', CLIENT_ID);
-      
-      tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: requestedScopes,
-        // NO usar include_granted_scopes para forzar solicitud de todos los scopes
-        callback: async (response) => {
-          console.log('Callback de Google OAuth recibido:', response);
-          
-          if (response.error) {
-            reject(new Error(response.error));
-            return;
+    console.log('🔵 Solicitando scopes:', requestedScopes);
+    console.log('🔵 Client ID:', CLIENT_ID);
+    
+    // Función para solicitar token con diferentes parámetros
+    const requestToken = (attemptNumber = 1, useSelectAccount = false) => {
+      return new Promise((resolve, reject) => {
+        let tokenClient = null;
+        let accessToken = null;
+        let userProfile = null;
+        
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: requestedScopes,
+          callback: async (response) => {
+            console.log(`Callback de Google OAuth recibido (intento ${attemptNumber}):`, response);
+            
+            if (response.error) {
+              reject(new Error(response.error));
+              return;
+            }
+            
+            accessToken = response.access_token;
+            
+            // Verificar que el token incluya el scope de Drive
+            const grantedScopes = response.scope || '';
+            console.log(`🔵 Verificando scopes recibidos (intento ${attemptNumber}):`, grantedScopes);
+            
+            const hasDriveScope = grantedScopes.includes('drive.file') || 
+                                  grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
+                                  grantedScopes.includes('drive');
+            
+            if (!hasDriveScope) {
+              // Si es el primer intento y no tiene el scope, intentar una segunda vez con select_account
+              if (attemptNumber === 1 && !useSelectAccount) {
+                console.warn('⚠️ El scope de Drive no está presente en el primer intento. Intentando nuevamente con select_account...');
+                // Limpiar estado antes del segundo intento
+                clearAuthState();
+                currentAccessToken = null;
+                currentUserProfile = null;
+                isSignedIn = false;
+                
+                // Intentar una segunda vez con select_account para forzar selección de cuenta y consentimiento completo
+                requestToken(2, true)
+                  .then(resolve)
+                  .catch(reject);
+                return;
+              }
+              
+              // Si ya intentamos dos veces y sigue sin el scope, rechazar
+              const errorMsg = `🚫 CONFIGURACIÓN REQUERIDA EN GOOGLE CLOUD CONSOLE\n\nEl scope de Google Drive NO está habilitado en tu configuración de OAuth.\nGoogle está ignorando el scope solicitado porque no está en la lista de scopes permitidos.\n\n⚠️ ESTO NO SE PUEDE SOLUCIONAR DESDE EL CÓDIGO\nDebes habilitar el scope en Google Cloud Console:\n\n📌 PASOS CRÍTICOS:\n\n1. Ve a: Google Auth Platform → Data Access\n2. Haz clic en "Add or remove scopes"\n3. Busca y MARCA: "https://www.googleapis.com/auth/drive.file"\n4. Guarda los cambios\n5. IMPORTANTE: Revoca permisos anteriores en tu cuenta de Google\n6. Espera 20-30 minutos y vuelve a intentar\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El código está correcto. El problema es la configuración en Google Cloud Console.`;
+              console.error('❌', errorMsg);
+              reject(new Error(errorMsg));
+              return;
+            }
+            
+            console.log(`✅ Token incluye scope de Google Drive (intento ${attemptNumber}):`, grantedScopes);
+            
+            // Guardar token y perfil
+            currentAccessToken = accessToken;
+            
+            // Usar el token para inicializar gapi.client
+            window.gapi.client.setToken({ access_token: accessToken });
+            
+            // Esperar un momento para que gapi.client procese el token completamente
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            // Obtener información del perfil usando el token
+            try {
+              const profileResponse = await window.gapi.client.request({
+                path: 'https://www.googleapis.com/oauth2/v2/userinfo',
+                method: 'GET'
+              });
+              
+              userProfile = {
+                id: profileResponse.result.id,
+                name: profileResponse.result.name,
+                email: profileResponse.result.email,
+                imageUrl: profileResponse.result.picture
+              };
+              
+              // Guardar perfil
+              currentUserProfile = userProfile;
+              isSignedIn = true;
+              
+              // Guardar en localStorage
+              saveAuthState(accessToken, userProfile);
+              
+              resolve({
+                success: true,
+                user: userProfile
+              });
+            } catch (profileError) {
+              console.warn('No se pudo obtener el perfil completo, usando información básica');
+              // Si falla obtener el perfil, al menos tenemos el token
+              currentUserProfile = {
+                id: 'unknown',
+                name: 'Usuario de Google',
+                email: 'usuario@google.com',
+                imageUrl: null
+              };
+              isSignedIn = true;
+              
+              // Guardar en localStorage
+              saveAuthState(accessToken, currentUserProfile);
+              
+              resolve({
+                success: true,
+                user: currentUserProfile
+              });
+            }
+          },
+          error_callback: (error) => {
+            console.error(`Error callback de Google OAuth (intento ${attemptNumber}):`, error);
+            reject(error);
           }
-          
-          accessToken = response.access_token;
-          
-          // Verificar que el token incluya el scope de Drive
-          const grantedScopes = response.scope || '';
-          console.log('🔵 Verificando scopes recibidos:', grantedScopes);
-          
-          const hasDriveScope = grantedScopes.includes('drive.file') || 
-                                grantedScopes.includes('https://www.googleapis.com/auth/drive.file') ||
-                                grantedScopes.includes('drive');
-          
-          if (!hasDriveScope) {
-            // Limpiar estado guardado para forzar nueva autenticación
-            clearAuthState();
-            currentAccessToken = null;
-            currentUserProfile = null;
-            isSignedIn = false;
-            
-            const errorMsg = `🚫 CONFIGURACIÓN REQUERIDA EN GOOGLE CLOUD CONSOLE\n\nEl scope de Google Drive NO está habilitado en tu configuración de OAuth.\nGoogle está ignorando el scope solicitado porque no está en la lista de scopes permitidos.\n\n⚠️ ESTO NO SE PUEDE SOLUCIONAR DESDE EL CÓDIGO\nDebes habilitar el scope en Google Cloud Console:\n\n📌 PASOS CRÍTICOS:\n\n1. Abre: https://console.cloud.google.com/apis/credentials/consent\n\n2. Haz clic en "ADD OR REMOVE SCOPES"\n\n3. Busca y MARCA: "https://www.googleapis.com/auth/drive.file"\n   (Busca "Google Drive API" → "drive.file")\n\n4. Guarda los cambios (UPDATE → SAVE AND CONTINUE)\n\n5. IMPORTANTE: Revoca permisos anteriores:\n   https://myaccount.google.com/permissions\n   (Busca tu app y haz clic en "Remove access")\n\n6. Espera 5-10 minutos y vuelve a intentar\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}\n\n💡 El código está correcto. El problema es la configuración en Google Cloud Console.`;
-            console.error('❌', errorMsg);
-            reject(new Error(errorMsg));
-            return;
-          }
-          
-          console.log('✅ Token incluye scope de Google Drive:', grantedScopes);
-          
-          // Guardar token y perfil
-          currentAccessToken = accessToken;
-          
-          // Usar el token para inicializar gapi.client
-          window.gapi.client.setToken({ access_token: accessToken });
-          
-          // Esperar un momento para que gapi.client procese el token completamente
-          await new Promise(resolve => setTimeout(resolve, 200));
-          
-          // Obtener información del perfil usando el token
-          try {
-            const profileResponse = await window.gapi.client.request({
-              path: 'https://www.googleapis.com/oauth2/v2/userinfo',
-              method: 'GET'
-            });
-            
-            userProfile = {
-              id: profileResponse.result.id,
-              name: profileResponse.result.name,
-              email: profileResponse.result.email,
-              imageUrl: profileResponse.result.picture
-            };
-            
-            // Guardar perfil
-            currentUserProfile = userProfile;
-            isSignedIn = true;
-            
-            // Guardar en localStorage
-            saveAuthState(accessToken, userProfile);
-            
-            resolve({
-              success: true,
-              user: userProfile
-            });
-          } catch (profileError) {
-            console.warn('No se pudo obtener el perfil completo, usando información básica');
-            // Si falla obtener el perfil, al menos tenemos el token
-            currentUserProfile = {
-              id: 'unknown',
-              name: 'Usuario de Google',
-              email: 'usuario@google.com',
-              imageUrl: null
-            };
-            isSignedIn = true;
-            
-            // Guardar en localStorage
-            saveAuthState(accessToken, currentUserProfile);
-            
-            resolve({
-              success: true,
-              user: currentUserProfile
-            });
-          }
-        },
-        error_callback: (error) => {
-          console.error('Error callback de Google OAuth:', error);
-          reject(error);
-        }
+        });
+        
+        // Generar un valor aleatorio para el parámetro state (protección CSRF)
+        const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        
+        // Solicitar token con popup
+        // En el segundo intento, usamos 'select_account consent' para forzar selección de cuenta y consentimiento completo
+        const promptValue = useSelectAccount ? 'select_account consent' : 'consent';
+        console.log(`🔵 Solicitando token (intento ${attemptNumber}) con prompt: ${promptValue}`);
+        
+        tokenClient.requestAccessToken({ 
+          prompt: promptValue,
+          state: stateValue
+        });
       });
-      
-      // Generar un valor aleatorio para el parámetro state (protección CSRF)
-      const stateValue = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      
-      // Solicitar token con popup, forzando consentimiento completo
-      // Incluimos el parámetro state para cumplir con las políticas de seguridad de Google
-      tokenClient.requestAccessToken({ 
-        prompt: 'consent',
-        state: stateValue
-      });
-    });
+    };
+    
+    // Iniciar el primer intento
+    return requestToken(1, false);
   } catch (error) {
     console.error('Error en login:', error);
     console.error('Error details:', {
