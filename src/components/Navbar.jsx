@@ -12,6 +12,7 @@ import {
 import InfoModal from './ui/InfoModal';
 import BackupRestoreModal from './ui/BackupRestoreModal';
 import GoogleDriveBackupsModal from './ui/GoogleDriveBackupsModal';
+import CheckboxRequiredModal from './ui/CheckboxRequiredModal';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -46,6 +47,11 @@ const Navbar = () => {
   const [googleUser, setGoogleUser] = useState(null);
   const [isLoadingGoogleDrive, setIsLoadingGoogleDrive] = useState(false);
   
+  // Estado para modal de checkbox requerido
+  const [checkboxRequiredModal, setCheckboxRequiredModal] = useState({
+    isOpen: false
+  });
+  
   // Inicializar Google Drive API
   useEffect(() => {
     initGoogleDrive().then(() => {
@@ -57,6 +63,20 @@ const Navbar = () => {
     }).catch(error => {
       console.error('Error inicializando Google Drive:', error);
     });
+  }, []);
+  
+  // Escuchar evento de checkbox requerido
+  useEffect(() => {
+    const handleCheckboxRequired = (event) => {
+      console.log('⚠️ Checkbox de Google Drive no marcado:', event.detail);
+      setCheckboxRequiredModal({ isOpen: true });
+    };
+    
+    window.addEventListener('googleDriveCheckboxRequired', handleCheckboxRequired);
+    
+    return () => {
+      window.removeEventListener('googleDriveCheckboxRequired', handleCheckboxRequired);
+    };
   }, []);
 
   const navItems = [
@@ -235,6 +255,63 @@ const Navbar = () => {
           variant: 'error'
         });
       }
+    }
+  };
+  
+  // Cerrar modal de checkbox requerido
+  const closeCheckboxRequiredModal = () => {
+    setCheckboxRequiredModal({ isOpen: false });
+  };
+  
+  // Reconectar a Google Drive (después de que el usuario marque el checkbox)
+  const handleReconnectGoogleDrive = async () => {
+    closeCheckboxRequiredModal();
+    
+    // Limpiar localStorage para forzar nueva autenticación
+    try {
+      localStorage.removeItem('pos_gdrive_token');
+      localStorage.removeItem('pos_gdrive_profile');
+    } catch (error) {
+      console.warn('Error limpiando localStorage:', error);
+    }
+    
+    // Esperar un momento antes de reconectar
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Reconectar
+    setIsLoadingGoogleDrive(true);
+    try {
+      const result = await signInGoogle();
+      if (result.success) {
+        setIsGoogleDriveConnected(true);
+        setGoogleUser(result.user);
+        setInfoModal({
+          isOpen: true,
+          title: '✅ Conectado correctamente',
+          message: `Bienvenido, ${result.user.name}!\n\nAhora puedes guardar backups en Google Drive.`,
+          variant: 'success',
+          isLoading: false
+        });
+      } else if (!result.cancelled) {
+        const errorMessage = result.error || 'No se pudo conectar a Google Drive';
+        setInfoModal({
+          isOpen: true,
+          title: 'Error al conectar',
+          message: errorMessage,
+          variant: 'error',
+          isLoading: false
+        });
+      }
+    } catch (error) {
+      setInfoModal({
+        isOpen: true,
+        title: 'Error al conectar',
+        message: error.message || 'Ocurrió un error al conectar con Google Drive.',
+        variant: 'error',
+        isLoading: false
+      });
+    } finally {
+      setIsLoadingGoogleDrive(false);
     }
   };
   
@@ -522,6 +599,12 @@ const Navbar = () => {
         isOpen={googleDriveBackupsModal.isOpen}
         onClose={closeGoogleDriveBackupsModal}
         onSelectBackup={handleSelectGoogleDriveBackup}
+      />
+      
+      <CheckboxRequiredModal
+        isOpen={checkboxRequiredModal.isOpen}
+        onClose={closeCheckboxRequiredModal}
+        onReconnect={handleReconnectGoogleDrive}
       />
     </nav>
   );

@@ -300,11 +300,19 @@ const initTokenClient = (forceReinit = false) => {
         currentUserProfile = null;
         isSignedIn = false;
         
-        const errorMsg = `🚫 SCOPE DE DRIVE NO OTORGADO\n\nGoogle no otorgó el scope "drive.file".\n\n⚠️ PROBLEMA COMÚN: En la pantalla de consentimiento de Google, el checkbox para "Visualiza, crea, edita y elimina solo los archivos de Google Drive que uses con esta aplicación" NO está marcado por defecto.\n\n📌 SOLUCIÓN:\n\n1. AL CONECTAR (MUY IMPORTANTE):\n   - Cuando aparezca la pantalla de consentimiento de Google\n   - DEBES MARCAR MANUALMENTE el checkbox que dice:\n     "Visualiza, crea, edita y elimina solo los archivos de Google Drive que uses con esta aplicación"\n   - Si no marcas este checkbox, Google NO otorgará el permiso de Drive\n   - Luego haz clic en "Permitir" o "Allow"\n\n2. SI YA CONECTASTE SIN MARCAR EL CHECKBOX:\n   - Revoca permisos: https://myaccount.google.com/permissions\n   - Busca "idgleb.github.io" o el Client ID: 642034093723-k9clei5maqkr2q0ful3dhks4hnrgufnu\n   - Haz clic en "Remove access" o "Eliminar acceso"\n   - Limpia localStorage: localStorage.clear() (en la consola)\n   - Recarga la página (Ctrl+F5)\n   - Haz clic en "Conectar Google Drive" NUEVAMENTE\n   - ESTA VEZ, MARCA EL CHECKBOX antes de hacer clic en "Permitir"\n\n3. VERIFICA CONFIGURACIÓN EN GOOGLE CLOUD CONSOLE:\n   - Ve a: https://console.cloud.google.com/apis/credentials/consent\n   - En "OAuth consent screen" > "Scopes":\n     * Debe aparecer: "https://www.googleapis.com/auth/drive.file"\n     * Si NO aparece, agrega el scope manualmente\n   - Asegúrate de que "Google Drive API" esté HABILITADO\n\n📋 Scopes solicitados: ${requestedScopes}\n📋 Scopes recibidos: ${grantedScopes}`;
-        console.error('❌', errorMsg);
+        console.error('❌ SCOPE DE DRIVE NO OTORGADO');
+        console.error('📋 Scopes solicitados:', requestedScopes);
+        console.error('📋 Scopes recibidos:', grantedScopes);
         
-        // Disparar evento de error para notificar al componente React
-        window.dispatchEvent(new CustomEvent('googleDriveError', { detail: { error: errorMsg } }));
+        // Disparar evento específico para checkbox no marcado
+        // Esto permite que el componente React muestre un modal con botón para reconectar
+        window.dispatchEvent(new CustomEvent('googleDriveCheckboxRequired', { 
+          detail: { 
+            requestedScopes,
+            grantedScopes,
+            message: 'El permiso de Google Drive es obligatorio. Por favor, marca el checkbox en la pantalla de consentimiento.'
+          } 
+        }));
         return;
       }
       
