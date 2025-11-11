@@ -91,14 +91,12 @@ export const initGoogleDrive = () => {
     
     const initGapi = async () => {
       return new Promise(async (resolveInit, rejectInit) => {
-        window.gapi.load('client:auth2', async () => {
+        // Solo cargar el cliente de Drive API, NO auth2 (usamos GIS para autenticación)
+        window.gapi.load('client', async () => {
           try {
             await window.gapi.client.init({
-              clientId: CLIENT_ID,
               discoveryDocs: DISCOVERY_DOCS,
-              scope: SCOPES,
-              fetch_basic_profile: true,
-              ux_mode: 'popup' // Forzar uso de popup en lugar de iframe
+              // NO incluir clientId ni scope aquí - GIS maneja la autenticación
             });
             
             isGapiInitialized = true;
@@ -142,64 +140,30 @@ export const initGoogleDrive = () => {
               }
             }
             
-            try {
-              // Intentar obtener la instancia de auth (puede fallar en algunos entornos)
-              const authInstance = window.gapi.auth2.getAuthInstance();
-              isSignedIn = authInstance.isSignedIn.get();
-              
-              // Escuchar cambios en el estado de autenticación
-              authInstance.isSignedIn.listen((signedIn) => {
-                isSignedIn = signedIn;
-              });
-            } catch (authError) {
-              // Si falla la inicialización de auth2 (por ejemplo, iframe bloqueado),
-              // no es crítico, solo significa que no podemos verificar el estado inicial
-              console.warn('No se pudo inicializar auth2 (esto es normal en algunos entornos):', authError);
-              // No cambiar isSignedIn aquí si ya lo restauramos desde localStorage
+            resolveInit(true);
+          } catch (error) {
+            console.debug('⚠️ Error inicializando gapi.client (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
+            // Marcar como inicializado de todas formas para permitir que el popup funcione
+            isGapiInitialized = true;
+            
+            // Intentar restaurar estado guardado incluso si falla
+            const savedState = loadAuthState();
+            if (savedState && savedState.token) {
+              try {
+                if (window.gapi && window.gapi.client) {
+                  window.gapi.client.setToken({ access_token: savedState.token });
+                  currentAccessToken = savedState.token;
+                  currentUserProfile = savedState.profile;
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  console.log('✅ Sesión de Google Drive restaurada');
+                  isSignedIn = true;
+                }
+              } catch (restoreError) {
+                console.warn('Error restaurando sesión:', restoreError);
+              }
             }
             
             resolveInit(true);
-          } catch (error) {
-            // Si el error es por iframe, continuar de todas formas (el popup funcionará)
-            if (error.error === 'idpiframe_initialization_failed' || 
-                error.message?.includes('idpiframe') ||
-                error.details?.includes('idpiframe') ||
-                error.details?.includes('Not a valid origin')) {
-              console.debug('⚠️ Google API iframe falló (esto es normal). El popup funcionará correctamente cuando hagas clic en "Conectar Google Drive".');
-              // Marcar como inicializado de todas formas para permitir que el popup funcione
-              isGapiInitialized = true;
-              
-              // Intentar restaurar estado guardado incluso si auth2 falla
-              const savedState = loadAuthState();
-              if (savedState && savedState.token) {
-                // Intentar usar el token directamente con gapi.client
-                try {
-                  if (window.gapi && window.gapi.client) {
-                    window.gapi.client.setToken({ access_token: savedState.token });
-                    currentAccessToken = savedState.token;
-                    currentUserProfile = savedState.profile;
-                    // Esperar un momento para que gapi.client procese el token
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    console.log('✅ Sesión de Google Drive restaurada (sin auth2)');
-                    isSignedIn = true;
-                  }
-                } catch (restoreError) {
-                  console.warn('Error restaurando sesión:', restoreError);
-                  clearAuthState();
-                  currentAccessToken = null;
-                  currentUserProfile = null;
-                  isSignedIn = false;
-                }
-              }
-              
-              resolveInit(true);
-            } else {
-              console.error('Error inicializando Google API:', error);
-              // Para otros errores, también intentamos continuar (el popup puede funcionar)
-              isGapiInitialized = true;
-              isSignedIn = false;
-              resolveInit(true);
-            }
           }
         });
       });
@@ -355,6 +319,23 @@ export const signInGoogle = async () => {
           }
           
           console.log('✅ Token incluye scope de Google Drive:', grantedScopes);
+          
+          // Verificación adicional usando google.accounts.oauth2.getToken()
+          try {
+            const tokenCheck = window.google?.accounts?.oauth2?.getToken?.();
+            if (tokenCheck && tokenCheck.scope) {
+              const tokenScopes = tokenCheck.scope;
+              const hasDriveInToken = tokenScopes.includes('drive.file') || 
+                                     tokenScopes.includes('https://www.googleapis.com/auth/drive.file') ||
+                                     tokenScopes.includes('drive');
+              if (!hasDriveInToken) {
+                throw new Error('El token obtenido no incluye el scope de Drive');
+              }
+              console.log('✅ Verificación adicional del token exitosa:', tokenScopes);
+            }
+          } catch (tokenCheckError) {
+            console.warn('Advertencia al verificar token:', tokenCheckError);
+          }
           
           // Guardar token y perfil
           currentAccessToken = accessToken;
