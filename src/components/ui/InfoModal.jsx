@@ -8,7 +8,8 @@ const InfoModal = ({
   message = '',
   variant = 'success', // success, error, warning, info
   buttonText = 'Aceptar',
-  icon = null
+  icon = null,
+  isLoading = false // Nueva propiedad para estado de carga
 }) => {
   if (!isOpen) return null;
 
@@ -31,10 +32,20 @@ const InfoModal = ({
 
   return (
     <>
-      <div className="info-modal-overlay" onClick={onClose}></div>
+      <div 
+        className="info-modal-overlay" 
+        onClick={isLoading ? undefined : onClose}
+        style={{ cursor: isLoading ? 'default' : 'pointer' }}
+      ></div>
       <div className={`info-modal info-modal--${variant}`}>
         <div className="info-modal-icon-container">
-          <span className="info-modal-icon">{displayIcon}</span>
+          {isLoading ? (
+            <div className="info-modal-spinner-container">
+              <div className="info-modal-spinner"></div>
+            </div>
+          ) : (
+            <span className="info-modal-icon">{displayIcon}</span>
+          )}
         </div>
         
         <div className="info-modal-header">
@@ -49,8 +60,9 @@ const InfoModal = ({
           <button 
             className="info-btn"
             onClick={onClose}
+            disabled={isLoading}
           >
-            {buttonText}
+            {isLoading ? 'Guardando...' : buttonText}
           </button>
         </div>
       </div>

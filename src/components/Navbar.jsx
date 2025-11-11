@@ -27,7 +27,8 @@ const Navbar = () => {
     isOpen: false,
     title: '',
     message: '',
-    variant: 'success'
+    variant: 'success',
+    isLoading: false
   });
   
   const [restoreModal, setRestoreModal] = useState({
@@ -251,27 +252,47 @@ const Navbar = () => {
       return;
     }
     
+    // MOSTRAR MODAL INMEDIATAMENTE con estado de carga
+    setInfoModal({
+      isOpen: true,
+      title: 'Guardando backup',
+      message: 'Guardando backup en Google Drive...\n\nPor favor, espera. Esto puede tardar unos momentos.',
+      variant: 'info',
+      isLoading: true
+    });
+    
     setIsLoadingGoogleDrive(true);
     
     try {
-    const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
-    const result = await uploadBackupToGoogleDrive(data);
-    
-    if (result.success) {
+      const data = JSON.parse(localStorage.getItem('pos_state') || '{}');
+      const result = await uploadBackupToGoogleDrive(data);
+      
+      // ACTUALIZAR MODAL con el resultado
+      if (result.success) {
+        setInfoModal({
+          isOpen: true,
+          title: '✅ Backup guardado',
+          message: `El backup "${result.filename}" se guardó correctamente en la carpeta "POS Backups" de tu Google Drive.`,
+          variant: 'success',
+          isLoading: false
+        });
+      } else {
+        setInfoModal({
+          isOpen: true,
+          title: '❌ Error al guardar',
+          message: result.error || 'No se pudo guardar el backup en Google Drive.',
+          variant: 'error',
+          isLoading: false
+        });
+      }
+    } catch (error) {
       setInfoModal({
         isOpen: true,
-        title: 'Backup guardado en Google Drive',
-        message: `✅ ${result.filename}\n\nEl backup se guardó en la carpeta "POS Backups" de tu Google Drive.`,
-        variant: 'success'
+        title: '❌ Error al guardar',
+        message: error.message || 'Ocurrió un error al guardar el backup en Google Drive.',
+        variant: 'error',
+        isLoading: false
       });
-    } else {
-      setInfoModal({
-        isOpen: true,
-        title: 'Error al guardar en Google Drive',
-        message: result.error,
-        variant: 'error'
-      });
-    }
     } finally {
       setIsLoadingGoogleDrive(false);
     }
@@ -487,6 +508,7 @@ const Navbar = () => {
         title={infoModal.title}
         message={infoModal.message}
         variant={infoModal.variant}
+        isLoading={infoModal.isLoading}
       />
       
       <BackupRestoreModal
